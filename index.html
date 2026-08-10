@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>EMBABI Games</title>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Tahoma, sans-serif;
+      background:
+        radial-gradient(circle at top, #1d2f5f 0%, #070b18 65%);
+      color: white;
+      min-height: 100vh;
+    }
+
+    button,
+    input {
+      font-family: inherit;
+    }
+
+    .container {
+      width: min(1150px, 94%);
+      margin: auto;
+      padding: 25px 0 60px;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 44px;
+      font-weight: 900;
+      margin-bottom: 25px;
+    }
+
+    .title span {
+      color: #ffd43b;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, .94);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 22px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.3);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: white;
+      font-size: 17px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 18px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .primary {
+      background: #ffd43b;
+      color: #111827;
+    }
+
+    .blue {
+      background: #2563eb;
+      color: white;
+    }
+
+    .red {
+      background: #dc2626;
+      color: white;
+    }
+
+    .green {
+      background: #16a34a;
+      color: white;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .room-code {
+      font-size: 38px;
+      font-weight: 900;
+      text-align: center;
+      color: #ffd43b;
+      letter-spacing: 5px;
+      margin: 15px 0;
+    }
+
+    .players-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .player-box {
+      background: #111827;
+      border-radius: 15px;
+      padding: 16px;
+      border: 1px solid #263247;
+    }
+
+    .player-name {
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .money {
+      color: #4ade80;
+      font-size: 18px;
+      margin-top: 8px;
+    }
+
+    /* AUCTION */
+
+    .auction {
+      text-align: center;
+    }
+
+    .position {
+      display: inline-block;
+      background: #334155;
+      padding: 7px 15px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .auction-player {
+      font-size: 40px;
+      font-weight: 900;
+      margin: 10px 0;
+    }
+
+    .rating {
+      color: #ffd43b;
+      font-size: 20px;
+    }
+
+    .bid {
+      font-size: 34px;
+      font-weight: 900;
+      color: #4ade80;
+      margin: 15px 0;
+    }
+
+    .timer {
+      width: 100px;
+      height: 100px;
+      margin: 15px auto;
+      border-radius: 50%;
+      border: 7px solid #ffd43b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 900;
+    }
+
+    .turn {
+      font-size: 21px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .bid-area {
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    .bid-area input {
+      text-align: center;
+      font-size: 22px;
+    }
+
+    /* TEAM */
+
+    .team-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .team-player {
+      background: #111827;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #263247;
+      text-align: center;
+    }
+
+    .team-player strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .free {
+      color: #4ade80;
+      font-size: 13px;
+    }
+
+    .bought {
+      color: #ffd43b;
+      font-size: 13px;
+    }
+
+    .player-photo-small {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    /* MESSAGES */
+
+    .message {
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+      background: rgba(220,38,38,.15);
+      color: #fca5a5;
+    }
+
+    .success {
+      background: rgba(22,163,74,.15);
+      color: #86efac;
+    }
+
+    /* =========================
+       FINAL MATCH
+    ========================= */
+
+    .final-header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .final-header h1 {
+      margin: 0;
+      font-size: 38px;
+      color: #ffd43b;
+    }
+
+    .final-header p {
+      color: #94a3b8;
+      font-size: 17px;
+    }
+
+    .score-board {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 20px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(30,41,59,.95),
+          rgba(15,23,42,.98)
+        );
+      border-radius: 24px;
+      padding: 25px;
+      border: 1px solid rgba(255,255,255,.1);
+      margin-bottom: 25px;
+    }
+
+    .score-team {
+      text-align: center;
+    }
+
+    .score-team-name {
+      font-size: 25px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .score-team-rating {
+      color: #94a3b8;
+    }
+
+    .score {
+      font-size: 62px;
+      font-weight: 1000;
+      color: #ffd43b;
+      white-space: nowrap;
+    }
+
+    .score-separator {
+      color: #64748b;
+      margin: 0 8px;
+    }
+
+    .match-winner {
+      text-align: center;
+      background: rgba(255,212,59,.1);
+      border: 1px solid rgba(255,212,59,.25);
+      color: #ffd43b;
+      border-radius: 15px;
+      padding: 14px;
+      font-size: 25px;
+      font-weight: 900;
+      margin-bottom: 25px;
+    }
+
+    .final-teams {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .final-team {
+      background: #0f172a;
+      border: 1px solid #263247;
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .final-team-title {
+      font-size: 24px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .final-player {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #111827;
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 9px;
+      border: 1px solid #263247;
+    }
+
+    .final-player-photo {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #1e293b;
+      flex-shrink: 0;
+    }
+
+    .final-player-info {
+      flex: 1;
+      text-align: right;
+    }
+
+    .final-player-name {
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .final-player-position {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .final-player-rating {
+      color: #ffd43b;
+      font-weight: bold;
+    }
+
+    .final-money {
+      text-align: center;
+      color: #4ade80;
+      margin-top: 15px;
+      font-size: 18px;
+    }
+
+    .champion {
+      border: 2px solid #ffd43b;
+      box-shadow:
+        0 0 25px rgba(255,212,59,.12);
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 700px) {
+
+      .title {
+        font-size: 30px;
+      }
+
+      .players-list {
+        grid-template-columns: 1fr;
+      }
+
+      .auction-player {
+        font-size: 30px;
+      }
+
+      .score-board {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .score {
+        font-size: 52px;
+      }
+
+      .final-teams {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="title">
+    ⚽ <span>EMBABI</span> Games
+  </div>
+
+
+  <!-- LOGIN -->
+
+  <div id="loginCard" class="card">
+
+    <h2>🎮 دخول اللعبة</h2>
+
+    <input
+      id="nameInput"
+      type="text"
+      placeholder="اكتب اسمك"
+    >
+
+    <div class="buttons">
+
+      <button
+        class="primary"
+        onclick="createRoom()"
+      >
+        إنشاء غرفة
+      </button>
+
+    </div>
+
+    <hr style="border-color:#263247;margin:22px 0;">
+
+    <input
+      id="roomInput"
+      type="text"
+      placeholder="كود الغرفة"
+    >
+
+    <button
+      class="blue"
+      onclick="joinRoom()"
+    >
+      دخول الغرفة
+    </button>
+
+    <div id="loginMessage"></div>
+
+  </div>
+
+
+  <!-- ROOM -->
+
+  <div id="roomCard" class="card hidden">
+
+    <h2>🏟️ الغرفة</h2>
+
+    <div
+      id="roomCode"
+      class="room-code"
+    ></div>
+
+    <div
+      id="waitingText"
+      style="text-align:center;font-size:18px;"
+    ></div>
+
+    <div
+      id="playersList"
+      class="players-list"
+    ></div>
+
+    <div
+      style="text-align:center;margin-top:20px;"
+    >
+
+      <button
+        id="startButton"
+        class="green hidden"
+        onclick="startGame()"
+      >
+        🚀 ابدأ اللعبة
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- GAME -->
+
+  <div id="gameCard" class="card hidden">
+
+    <div id="auctionArea">
+
+      <div class="auction">
+
+        <div
+          id="position"
+          class="position"
+        ></div>
+
+        <div
+          id="auctionPlayer"
+          class="auction-player"
+        ></div>
+
+        <div
+          id="auctionRating"
+          class="rating"
+        ></div>
+
+        <div
+          id="currentBid"
+          class="bid"
+        >
+          0M
+        </div>
+
+        <div
+          id="timer"
+          class="timer"
+        >
+          20
+        </div>
+
+        <div
+          id="turnText"
+          class="turn"
+        ></div>
+
+        <div
+          id="bidControls"
+          class="bid-area hidden"
+        >
+
+          <div class="buttons">
+
+            <button
+              class="primary"
+              onclick="bidOne()"
+            >
+              +1M
+            </button>
+
+            <button
+              class="red"
+              onclick="passAuction()"
+            >
+              سيب
+            </button>
+
+          </div>
+
+          <input
+            id="customBidInput"
+            type="number"
+            min="1"
+            placeholder="اكتب المبلغ بالمليون مثل 50"
+          >
+
+          <button
+            class="blue"
+            onclick="customBid()"
+          >
+            💰 زود بالمبلغ
+          </button>
+
+        </div>
+
+        <div id="auctionMessage"></div>
+
+      </div>
+
+    </div>
+
+
+    <div style="margin-top:30px;">
+
+      <h2>👥 الفرق</h2>
+
+      <div
+        id="teamsArea"
+        class="players-list"
+      ></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- FINAL RESULT -->
+
+  <div
+    id="resultCard"
+    class="card hidden"
+  >
+
+    <div class="final-header">
+
+      <h1>
+        🏆 نهاية المباراة
+      </h1>
+
+      <p>
+        EMBABI GAMES
+      </p>
+
+    </div>
+
+    <div id="finalResult"></div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const socket = io();
+
+let myId = null;
+let myRoomCode = null;
+let isHost = false;
+
+
+/* =========================
+   PLAYER IMAGES
+========================= */
+
+const playerImages = {
+
+  "Mohamed Salah":
+    "https://img.a.transfermarkt.technology/portrait/big/148455-1701185284.jpg?lm=1",
+
+  "Kylian Mbappé":
+    "https://img.a.transfermarkt.technology/portrait/big/342229-1701269281.jpg?lm=1",
+
+  "Erling Haaland":
+    "https://img.a.transfermarkt.technology/portrait/big/418560-1701183947.jpg?lm=1",
+
+  "Vinícius Jr.":
+    "https://img.a.transfermarkt.technology/portrait/big/371998-1701183696.jpg?lm=1",
+
+  "Lamine Yamal":
+    "https://img.a.transfermarkt.technology/portrait/big/937958-1710420174.jpg?lm=1",
+
+  "Harry Kane":
+    "https://img.a.transfermarkt.technology/portrait/big/132098-1701184345.jpg?lm=1",
+
+  "Kevin De Bruyne":
+    "https://img.a.transfermarkt.technology/portrait/big/88755-1701184374.jpg?lm=1",
+
+  "Jude Bellingham":
+    "https://img.a.transfermarkt.technology/portrait/big/581678-1701184155.jpg?lm=1",
+
+  "Rodri":
+    "https://img.a.transfermarkt.technology/portrait/big/357565-1701184496.jpg?lm=1",
+
+  "Pedri":
+    "https://img.a.transfermarkt.technology/portrait/big/683840-1701184574.jpg?lm=1",
+
+  "Federico Valverde":
+    "https://img.a.transfermarkt.technology/portrait/big/369081-1701184655.jpg?lm=1",
+
+  "Bernardo Silva":
+    "https://img.a.transfermarkt.technology/portrait/big/241641-1701184707.jpg?lm=1",
+
+  "Virgil van Dijk":
+    "https://img.a.transfermarkt.technology/portrait/big/139208-1701184805.jpg?lm=1",
+
+  "William Saliba":
+    "https://img.a.transfermarkt.technology/portrait/big/495666-1701184878.jpg?lm=1",
+
+  "Rúben Dias":
+    "https://img.a.transfermarkt.technology/portrait/big/258805-1701184931.jpg?lm=1",
+
+  "Antonio Rüdiger":
+    "https://img.a.transfermarkt.technology/portrait/big/86202-1701185012.jpg?lm=1",
+
+  "Achraf Hakimi":
+    "https://img.a.transfermarkt.technology/portrait/big/398073-1701185097.jpg?lm=1",
+
+  "Theo Hernández":
+    "https://img.a.transfermarkt.technology/portrait/big/339808-1701185172.jpg?lm=1",
+
+  "Mike Maignan":
+    "https://img.a.transfermarkt.technology/portrait/big/182906-1701185231.jpg?lm=1",
+
+  "Alisson":
+    "https://img.a.transfermarkt.technology/portrait/big/105470-1701185321.jpg?lm=1",
+
+  "Ederson":
+    "https://img.a.transfermarkt.technology/portrait/big/238223-1701185387.jpg?lm=1",
+
+  "Thibaut Courtois":
+    "https://img.a.transfermarkt.technology/portrait/big/108390-1701185452.jpg?lm=1"
+};
+
+
+/* =========================
+   DEFAULT IMAGE
+========================= */
+
+function getPlayerImage(name) {
+
+  return playerImages[name] ||
+    "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+
+}
+
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const loginCard =
+  document.getElementById("loginCard");
+
+const roomCard =
+  document.getElementById("roomCard");
+
+const gameCard =
+  document.getElementById("gameCard");
+
+const resultCard =
+  document.getElementById("resultCard");
+
+
+/* =========================
+   CONNECT
+========================= */
+
+socket.on("connect", () => {
+
+  myId = socket.id;
+
+});
+
+
+/* =========================
+   CREATE ROOM
+========================= */
+
+function createRoom() {
+
+  const name =
+    document.getElementById(
+      "nameInput"
+    ).value.trim();
+
+  socket.emit(
+    "createRoom",
+    { name }
+  );
+
+}
+
+
+/* =========================
+   JOIN ROOM
+========================= */
+
+function joinRoom() {
+
+  const name =
+    document.getElementById(
+      "nameInput"
+    ).value.trim();
+
+  const roomCode =
+    document.getElementById(
+      "roomInput"
+    ).value.trim();
+
+  socket.emit(
+    "joinRoom",
+    {
+      name,
+      roomCode
+    }
+  );
+
+}
+
+
+/* =========================
+   ROOM CREATED
+========================= */
+
+socket.on(
+  "roomCreated",
+  data => {
+
+    myRoomCode =
+      data.roomCode;
+
+    isHost = true;
+
+    showRoom();
+
+    renderPlayers(
+      data.players
+    );
+
+    updateWaitingText();
+
+  }
+);
+
+
+/* =========================
+   ROOM JOINED
+========================= */
+
+socket.on(
+  "roomJoined",
+  data => {
+
+    myRoomCode =
+      data.roomCode;
+
+    isHost = false;
+
+    showRoom();
+
+    renderPlayers(
+      data.players
+    );
+
+    updateWaitingText();
+
+  }
+);
+
+
+/* =========================
+   SHOW ROOM
+========================= */
+
+function showRoom() {
+
+  loginCard.classList.add(
+    "hidden"
+  );
+
+  roomCard.classList.remove(
+    "hidden"
+  );
+
+  document.getElementById(
+    "roomCode"
+  ).textContent =
+    myRoomCode;
+
+}
+
+
+/* =========================
+   PLAYERS UPDATED
+========================= */
+
+socket.on(
+  "playersUpdated",
+  data => {
+
+    renderPlayers(
+      data.players
+    );
+
+    updateWaitingText();
+
+  }
+);
+
+
+/* =========================
+   RENDER PLAYERS
+========================= */
+
+function renderPlayers(players) {
+
+  const area =
+    document.getElementById(
+      "playersList"
+    );
+
+  area.innerHTML = "";
+
+  players.forEach(
+    player => {
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+      div.className =
+        "player-box";
+
+      div.innerHTML = `
+
+        <div class="player-name">
+          ${escapeHtml(player.name)}
+        </div>
+
+        <div class="money">
+          💰 ${player.money}M
+        </div>
+
+      `;
+
+      area.appendChild(div);
+
+    }
+  );
+
+}
+
+
+/* =========================
+   WAITING
+========================= */
+
+function updateWaitingText() {
+
+  const players =
+    document.querySelectorAll(
+      "#playersList .player-box"
+    );
+
+  const startButton =
+    document.getElementById(
+      "startButton"
+    );
+
+  if (
+    isHost &&
+    players.length === 2
+  ) {
+
+    startButton.classList.remove(
+      "hidden"
+    );
+
+    document.getElementById(
+      "waitingText"
+    ).textContent =
+      "اللاعبان جاهزان — ابدأ اللعبة 🚀";
+
+  }
+
+  else {
+
+    startButton.classList.add(
+      "hidden"
+    );
+
+    document.getElementById(
+      "waitingText"
+    ).textContent =
+      "في انتظار اللاعب الثاني...";
+
+  }
+
+}
+
+
+/* =========================
+   START GAME
+========================= */
+
+function startGame() {
+
+  socket.emit(
+    "startGame"
+  );
+
+}
+
+
+/* =========================
+   GAME STARTED
+========================= */
+
+socket.on(
+  "gameStarted",
+  data => {
+
+    roomCard.classList.add(
+      "hidden"
+    );
+
+    gameCard.classList.remove(
+      "hidden"
+    );
+
+    resultCard.classList.add(
+      "hidden"
+    );
+
+    renderTeams(
+      data.players
+    );
+
+  }
+);
+
+
+/* =========================
+   ROOM STATE
+========================= */
+
+socket.on(
+  "roomState",
+  state => {
+
+    if (!state) return;
+
+    if (state.players) {
+
+      renderTeams(
+        state.players
+      );
+
+    }
+
+    if (state.auction) {
+
+      showAuction(
+        state.auction
+      );
+
+    }
+
+    else {
+
+      hideAuctionControls();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   SHOW AUCTION
+========================= */
+
+function showAuction(auction) {
+
+  document.getElementById(
+    "position"
+  ).textContent =
+    auction.position;
+
+  document.getElementById(
+    "auctionPlayer"
+  ).textContent =
+    auction.player.name;
+
+  document.getElementById(
+    "auctionRating"
+  ).textContent =
+    "⭐ Rating " +
+    auction.player.rating;
+
+  document.getElementById(
+    "currentBid"
+  ).textContent =
+    auction.currentBid + "M";
+
+  document.getElementById(
+    "timer"
+  ).textContent =
+    auction.timeLeft;
+
+  const myTurn =
+    auction.turnPlayerId === myId;
+
+  const controls =
+    document.getElementById(
+      "bidControls"
+    );
+
+  const turnText =
+    document.getElementById(
+      "turnText"
+    );
+
+  controls.classList.toggle(
+    "hidden",
+    !myTurn
+  );
+
+  if (myTurn) {
+
+    turnText.textContent =
+      "🔥 دورك! اختار: زود أو سيب";
+
+    turnText.style.color =
+      "#4ade80";
+
+  }
+
+  else {
+
+    turnText.textContent =
+      "⏳ انتظر دورك...";
+
+    turnText.style.color =
+      "#fbbf24";
+
+  }
+
+}
+
+
+/* =========================
+   HIDE CONTROLS
+========================= */
+
+function hideAuctionControls() {
+
+  document.getElementById(
+    "bidControls"
+  ).classList.add(
+    "hidden"
+  );
+
+}
+
+
+/* =========================
+   +1M
+========================= */
+
+function bidOne() {
+
+  socket.emit(
+    "bidOne"
+  );
+
+}
+
+
+/* =========================
+   CUSTOM BID
+========================= */
+
+function customBid() {
+
+  const input =
+    document.getElementById(
+      "customBidInput"
+    );
+
+  const amount =
+    Number(input.value);
+
+  if (!amount) return;
+
+  socket.emit(
+    "customBid",
+    { amount }
+  );
+
+  input.value = "";
+
+}
+
+
+/* =========================
+   PASS
+========================= */
+
+function passAuction() {
+
+  socket.emit(
+    "passAuction"
+  );
+
+}
+
+
+/* =========================
+   AUCTION ERROR
+========================= */
+
+socket.on(
+  "auctionError",
+  message => {
+
+    const box =
+      document.getElementById(
+        "auctionMessage"
+      );
+
+    box.className =
+      "message";
+
+    box.textContent =
+      message;
+
+    setTimeout(
+      () => {
+
+        box.textContent = "";
+        box.className = "";
+
+      },
+      2500
+    );
+
+  }
+);
+
+
+/* =========================
+   AUCTION FINISHED
+========================= */
+
+socket.on(
+  "auctionFinished",
+  result => {
+
+    const box =
+      document.getElementById(
+        "auctionMessage"
+      );
+
+    const won =
+      result.winnerId === myId;
+
+    const replacement =
+      result.replacement;
+
+    if (won) {
+
+      box.className =
+        "message success";
+
+      box.innerHTML =
+        `🏆 فزت بـ
+         ${escapeHtml(result.soldPlayer.name)}
+         مقابل ${result.price}M`;
+
+    }
+
+    else {
+
+      box.className =
+        "message success";
+
+      if (replacement) {
+
+        box.innerHTML =
+          `🎁 خسرت المزاد، وحصلت مجانًا على
+           <strong>
+           ${escapeHtml(replacement.name)}
+           </strong>
+           (${replacement.position})`;
+
+      }
+
+      else {
+
+        box.innerHTML =
+          "🎁 خسرت المزاد ولم يوجد لاعب بديل متاح.";
+
+      }
+
+    }
+
+    renderTeamsFromResult(
+      result
+    );
+
+  }
+);
+
+
+/* =========================
+   RENDER TEAMS
+========================= */
+
+function renderTeams(players) {
+
+  const area =
+    document.getElementById(
+      "teamsArea"
+    );
+
+  if (!area) return;
+
+  area.innerHTML = "";
+
+  players.forEach(
+    player => {
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+      div.className =
+        "player-box";
+
+      let teamHtml = "";
+
+      if (
+        player.team &&
+        player.team.length
+      ) {
+
+        teamHtml = `
+          <div class="team-grid">
+
+            ${player.team.map(
+              p => `
+
+                <div class="team-player">
+
+                  <img
+                    class="player-photo-small"
+                    src="${getPlayerImage(p.name)}"
+                    onerror="this.style.display='none'"
+                  >
+
+                  <strong>
+                    ${escapeHtml(p.name)}
+                  </strong>
+
+                  <div>
+                    ${p.position}
+                    ⭐ ${p.rating}
+                  </div>
+
+                  ${
+                    p.randomReplacement
+                    ?
+                    `<div class="free">
+                      🎁 مجاني
+                    </div>`
+                    :
+                    `<div class="bought">
+                      💰 ${p.boughtFor}M
+                    </div>`
+                  }
+
+                </div>
+
+              `
+            ).join("")}
+
+          </div>
+        `;
+
+      }
+
+      div.innerHTML = `
+
+        <div class="player-name">
+          ${escapeHtml(player.name)}
+        </div>
+
+        <div class="money">
+          💰 ${player.money}M
+        </div>
+
+        ${teamHtml}
+
+      `;
+
+      area.appendChild(
+        div
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================
+   RESULT TEAM UPDATE
+========================= */
+
+function renderTeamsFromResult(result) {
+
+  const players = [
+
+    {
+      id: result.winnerId,
+      name: "الفائز",
+      money: result.winnerMoney,
+      team: result.winnerTeam
+    },
+
+    {
+      id: result.loserId,
+      name: "الخاسر",
+      money: result.loserMoney,
+      team: result.loserTeam
+    }
+
+  ];
+
+  renderTeams(
+    players
+  );
+
+}
+
+
+/* =========================
+   TEAM RATING
+========================= */
+
+function teamRating(player) {
+
+  if (
+    !player.team ||
+    !player.team.length
+  ) {
+    return 0;
+  }
+
+  const total =
+    player.team.reduce(
+      (sum, p) =>
+        sum + Number(p.rating || 0),
+      0
+    );
+
+  return Number(
+    (total / player.team.length)
+      .toFixed(1)
+  );
+
+}
+
+
+/* =========================
+   SEEDED NUMBER
+========================= */
+
+function seededNumber(text) {
+
+  let hash = 0;
+
+  for (
+    let i = 0;
+    i < text.length;
+    i++
+  ) {
+
+    hash =
+      ((hash << 5) - hash) +
+      text.charCodeAt(i);
+
+    hash |= 0;
+
+  }
+
+  return Math.abs(hash);
+
+}
+
+
+/* =========================
+   MATCH SCORE
+========================= */
+
+function calculateMatchScore(
+  player1,
+  player2
+) {
+
+  const rating1 =
+    teamRating(player1);
+
+  const rating2 =
+    teamRating(player2);
+
+  const seed =
+    seededNumber(
+      player1.id +
+      player2.id +
+      player1.team.map(
+        p => p.id
+      ).join("") +
+      player2.team.map(
+        p => p.id
+      ).join("")
+    );
+
+  /*
+    إجمالي أهداف المباراة
+    من 3 إلى 9
+  */
+
+  const totalGoals =
+    3 + (seed % 7);
+
+  const difference =
+    rating1 - rating2;
+
+  let firstGoals =
+    Math.round(
+      totalGoals / 2 +
+      difference / 8
+    );
+
+  firstGoals =
+    Math.max(
+      0,
+      Math.min(
+        totalGoals,
+        firstGoals
+      )
+    );
+
+  let secondGoals =
+    totalGoals -
+    firstGoals;
+
+  /*
+    لو الفريقين متساويين،
+    نضمن نتيجة غير تعادل
+    عشان يكون فيه فائز.
+  */
+
+  if (
+    firstGoals === secondGoals
+  ) {
+
+    if (seed % 2 === 0) {
+
+      firstGoals++;
+      secondGoals--;
+
+    }
+
+    else {
+
+      firstGoals--;
+      secondGoals++;
+
+    }
+
+    firstGoals =
+      Math.max(
+        0,
+        firstGoals
+      );
+
+    secondGoals =
+      Math.max(
+        0,
+        secondGoals
+      );
+
+  }
+
+  return {
+    score1: firstGoals,
+    score2: secondGoals,
+    rating1,
+    rating2
+  };
+
+}
+
+
+/* =========================
+   GAME FINISHED
+========================= */
+
+socket.on(
+  "gameFinished",
+  data => {
+
+    gameCard.classList.add(
+      "hidden"
+    );
+
+    resultCard.classList.remove(
+      "hidden"
+    );
+
+    const area =
+      document.getElementById(
+        "finalResult"
+      );
+
+    area.innerHTML = "";
+
+    if (
+      !data.players ||
+      data.players.length !== 2
+    ) {
+
+      area.innerHTML =
+        "<div class='message'>تعذر عرض نتيجة المباراة.</div>";
+
+      return;
+
+    }
+
+    const player1 =
+      data.players[0];
+
+    const player2 =
+      data.players[1];
+
+    const match =
+      calculateMatchScore(
+        player1,
+        player2
+      );
+
+    let winner;
+
+    if (
+      match.score1 >
+      match.score2
+    ) {
+
+      winner =
+        player1;
+
+    }
+
+    else {
+
+      winner =
+        player2;
+
+    }
+
+    area.innerHTML = `
+
+      <div class="score-board">
+
+        <div class="score-team">
+
+          <div class="score-team-name">
+            ${escapeHtml(player1.name)}
+          </div>
+
+          <div class="score-team-rating">
+            ⭐ Rating ${match.rating1}
+          </div>
+
+        </div>
+
+        <div class="score">
+
+          ${match.score1}
+
+          <span class="score-separator">
+            -
+          </span>
+
+          ${match.score2}
+
+        </div>
+
+        <div class="score-team">
+
+          <div class="score-team-name">
+            ${escapeHtml(player2.name)}
+          </div>
+
+          <div class="score-team-rating">
+            ⭐ Rating ${match.rating2}
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="match-winner">
+
+        🏆 الفائز:
+        ${escapeHtml(winner.name)}
+
+      </div>
+
+      <div class="final-teams">
+
+        ${renderFinalTeam(
+          player1,
+          match.score1 >
+          match.score2
+        )}
+
+        ${renderFinalTeam(
+          player2,
+          match.score2 >
+          match.score1
+        )}
+
+      </div>
+
+    `;
+
+  }
+);
+
+
+/* =========================
+   FINAL TEAM
+========================= */
+
+function renderFinalTeam(
+  player,
+  champion
+) {
+
+  const team =
+    player.team || [];
+
+  return `
+
+    <div
+      class="final-team
+      ${champion ? "champion" : ""}"
+    >
+
+      <div class="final-team-title">
+
+        ${champion ? "🏆 " : ""}
+
+        ${escapeHtml(player.name)}
+
+      </div>
+
+      ${team.map(
+        p => `
+
+          <div class="final-player">
+
+            <img
+              class="final-player-photo"
+              src="${getPlayerImage(p.name)}"
+              alt="${escapeHtml(p.name)}"
+              onerror="this.style.display='none'"
+            >
+
+            <div class="final-player-info">
+
+              <div class="final-player-name">
+                ${escapeHtml(p.name)}
+              </div>
+
+              <div class="final-player-position">
+                ${p.position}
+              </div>
+
+            </div>
+
+            <div class="final-player-rating">
+              ⭐ ${p.rating}
+            </div>
+
+          </div>
+
+        `
+      ).join("")}
+
+      <div class="final-money">
+        💰 ${player.money}M متبقية
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+/* =========================
+   GENERIC ERROR
+========================= */
+
+socket.on(
+  "errorMessage",
+  message => {
+
+    const box =
+      document.getElementById(
+        "loginMessage"
+      );
+
+    box.className =
+      "message";
+
+    box.textContent =
+      message;
+
+  }
+);
+
+</script>
+
+</body>
+</html>
