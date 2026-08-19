@@ -108,6 +108,14 @@
       color: white;
     }
 
+    .replay {
+      background: #7c3aed;
+      color: white;
+      font-size: 18px;
+      padding: 15px 25px;
+      box-shadow: 0 8px 25px rgba(124,58,237,.25);
+    }
+
     .buttons {
       display: flex;
       gap: 10px;
@@ -268,9 +276,7 @@
       color: #86efac;
     }
 
-    /* =========================
-       FINAL MATCH
-    ========================= */
+    /* FINAL MATCH */
 
     .final-header {
       text-align: center;
@@ -341,6 +347,17 @@
       font-size: 25px;
       font-weight: 900;
       margin-bottom: 25px;
+    }
+
+    .replay-area {
+      text-align: center;
+      margin: 25px 0 30px;
+    }
+
+    .replay-info {
+      color: #94a3b8;
+      margin-bottom: 15px;
+      font-size: 16px;
     }
 
     .final-teams {
@@ -446,8 +463,10 @@
         grid-template-columns: 1fr;
       }
 
+      .replay {
+        width: 100%;
+      }
     }
-
   </style>
 </head>
 
@@ -458,7 +477,6 @@
   <div class="title">
     ⚽ <span>EMBABI</span> Games
   </div>
-
 
   <!-- LOGIN -->
 
@@ -502,7 +520,6 @@
 
   </div>
 
-
   <!-- ROOM -->
 
   <div id="roomCard" class="card hidden">
@@ -539,7 +556,6 @@
     </div>
 
   </div>
-
 
   <!-- GAME -->
 
@@ -628,7 +644,6 @@
 
     </div>
 
-
     <div style="margin-top:30px;">
 
       <h2>👥 الفرق</h2>
@@ -641,7 +656,6 @@
     </div>
 
   </div>
-
 
   <!-- FINAL RESULT -->
 
@@ -667,7 +681,6 @@
   </div>
 
 </div>
-
 
 <script>
 
@@ -902,6 +915,14 @@ function showRoom() {
     "hidden"
   );
 
+  gameCard.classList.add(
+    "hidden"
+  );
+
+  resultCard.classList.add(
+    "hidden"
+  );
+
   document.getElementById(
     "roomCode"
   ).textContent =
@@ -1031,6 +1052,97 @@ function startGame() {
   );
 
 }
+
+
+/* =========================
+   PLAY AGAIN
+========================= */
+
+function playAgain() {
+
+  if (!myRoomCode) {
+    return;
+  }
+
+  const button =
+    document.getElementById(
+      "playAgainButton"
+    );
+
+  if (button) {
+    button.disabled = true;
+    button.textContent =
+      "⏳ جاري تجهيز اللعبة...";
+  }
+
+  socket.emit(
+    "playAgain"
+  );
+
+}
+
+
+/* =========================
+   PLAY AGAIN WAITING
+========================= */
+
+socket.on(
+  "playAgainWaiting",
+  data => {
+
+    const area =
+      document.getElementById(
+        "finalResult"
+      );
+
+    if (!area) {
+      return;
+    }
+
+    area.innerHTML = `
+
+      <div class="message success">
+
+        🔄 تم طلب إعادة اللعب.
+
+        <br><br>
+
+        ⏳ في انتظار اللاعب الآخر...
+
+      </div>
+
+    `;
+
+  }
+);
+
+
+/* =========================
+   PLAY AGAIN READY
+========================= */
+
+socket.on(
+  "playAgainReady",
+  data => {
+
+    roomCard.classList.add(
+      "hidden"
+    );
+
+    resultCard.classList.add(
+      "hidden"
+    );
+
+    gameCard.classList.remove(
+      "hidden"
+    );
+
+    renderTeams(
+      data.players || []
+    );
+
+  }
+);
 
 
 /* =========================
@@ -1549,11 +1661,6 @@ function calculateMatchScore(
       ).join("")
     );
 
-  /*
-    إجمالي أهداف المباراة
-    من 3 إلى 9
-  */
-
   const totalGoals =
     3 + (seed % 7);
 
@@ -1578,12 +1685,6 @@ function calculateMatchScore(
   let secondGoals =
     totalGoals -
     firstGoals;
-
-  /*
-    لو الفريقين متساويين،
-    نضمن نتيجة غير تعادل
-    عشان يكون فيه فائز.
-  */
 
   if (
     firstGoals === secondGoals
@@ -1739,6 +1840,22 @@ socket.on(
 
         🏆 الفائز:
         ${escapeHtml(winner.name)}
+
+      </div>
+
+      <div class="replay-area">
+
+        <div class="replay-info">
+          🎮 يمكنكم لعب مباراة جديدة في نفس الغرفة
+        </div>
+
+        <button
+          id="playAgainButton"
+          class="replay"
+          onclick="playAgain()"
+        >
+          🔄 لعب مرة أخرى
+        </button>
 
       </div>
 

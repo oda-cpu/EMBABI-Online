@@ -18,76 +18,422 @@ const TURN_TIME = 20;
 
 const rooms = new Map();
 
-/* =========================
+/* =========================================================
    PLAYERS DATABASE
-========================= */
+========================================================= */
 
 const playersDatabase = {
   GK: [
-    { id: "gk1", name: "Mike Maignan", position: "GK", rating: 87 },
-    { id: "gk2", name: "Alisson", position: "GK", rating: 89 },
-    { id: "gk3", name: "Ederson", position: "GK", rating: 88 },
-    { id: "gk4", name: "Thibaut Courtois", position: "GK", rating: 90 }
+    "Gianluigi Buffon",
+    "Manuel Neuer",
+    "Iker Casillas",
+    "Peter Schmeichel",
+    "Oliver Kahn",
+    "Edwin van der Sar",
+    "Petr Čech",
+    "Lev Yashin",
+    "Dino Zoff",
+    "Gordon Banks",
+    "Thibaut Courtois",
+    "Alisson Becker",
+    "Ederson",
+    "Mike Maignan",
+    "Jan Oblak",
+    "Marc-André ter Stegen",
+    "Emiliano Martínez",
+    "Yassine Bounou",
+    "David de Gea",
+    "Hugo Lloris",
+    "Keylor Navas",
+    "Samir Handanović",
+    "Wojciech Szczęsny",
+    "Gianluigi Donnarumma",
+    "André Onana",
+    "Édouard Mendy",
+    "Gregor Kobel",
+    "Diogo Costa",
+    "Unai Simón",
+    "Jordan Pickford",
+    "Aaron Ramsdale",
+    "David Raya",
+    "Bernd Leno",
+    "Nick Pope",
+    "Robert Sánchez",
+    "Kepa Arrizabalaga",
+    "Dean Henderson",
+    "Yann Sommer",
+    "Roman Bürki",
+    "Kevin Trapp",
+    "Marcelo Grohe",
+    "Alphonse Areola",
+    "Steve Mandanda",
+    "Rui Patrício",
+    "José Sá",
+    "Anthony Lopes",
+    "Fernando Muslera",
+    "Claudio Bravo",
+    "David Ospina",
+    "Guillermo Ochoa",
+    "Franco Armani",
+    "Sergio Romero",
+    "Gerónimo Rulli",
+    "Gianluca Pagliuca",
+    "Walter Zenga",
+    "Angelo Peruzzi",
+    "Francesco Toldo",
+    "Dida",
+    "Júlio César",
+    "Victor Valdés",
+    "Pepe Reina",
+    "Santiago Cañizares",
+    "Andoni Zubizarreta"
   ],
 
   DEF: [
-    { id: "def1", name: "Virgil van Dijk", position: "DEF", rating: 89 },
-    { id: "def2", name: "William Saliba", position: "DEF", rating: 87 },
-    { id: "def3", name: "Rúben Dias", position: "DEF", rating: 88 },
-    { id: "def4", name: "Antonio Rüdiger", position: "DEF", rating: 87 },
-    { id: "def5", name: "Achraf Hakimi", position: "DEF", rating: 88 },
-    { id: "def6", name: "Theo Hernández", position: "DEF", rating: 86 }
+    "Paolo Maldini",
+    "Franz Beckenbauer",
+    "Franco Baresi",
+    "Alessandro Nesta",
+    "Fabio Cannavaro",
+    "Sergio Ramos",
+    "Carles Puyol",
+    "Rio Ferdinand",
+    "Nemanja Vidić",
+    "John Terry",
+    "Ashley Cole",
+    "Cafu",
+    "Roberto Carlos",
+    "Carlos Alberto",
+    "Bobby Moore",
+    "Gaetano Scirea",
+    "Javier Zanetti",
+    "Philipp Lahm",
+    "Marcelo",
+    "Gerard Piqué",
+    "Thiago Silva",
+    "Pepe",
+    "Raphaël Varane",
+    "Virgil van Dijk",
+    "Rúben Dias",
+    "William Saliba",
+    "Antonio Rüdiger",
+    "Achraf Hakimi",
+    "Theo Hernández",
+    "Alphonso Davies",
+    "Trent Alexander-Arnold",
+    "Andrew Robertson",
+    "Marquinhos",
+    "Éder Militão",
+    "David Alaba",
+    "Matthijs de Ligt",
+    "Ronald Araújo",
+    "Jules Koundé",
+    "William Gallas",
+    "Ricardo Carvalho",
+    "Fernando Hierro",
+    "Marcel Desailly",
+    "Lilian Thuram",
+    "Laurent Blanc",
+    "Daniel Passarella",
+    "Walter Samuel",
+    "Jorge Costa",
+    "Lúcio",
+    "Giorgio Chiellini",
+    "Leonardo Bonucci",
+    "Gianluca Zambrotta",
+    "Mauro Tassotti",
+    "Alessandro Costacurta",
+    "César Azpilicueta",
+    "Diego Godín",
+    "Martín Cáceres",
+    "Javier Mascherano",
+    "Éric Abidal",
+    "Patrice Evra",
+    "Raphaël Guerreiro",
+    "João Cancelo",
+    "Reece James",
+    "Kyle Walker",
+    "John Stones",
+    "Mats Hummels",
+    "Niklas Süle",
+    "Jerome Boateng",
+    "Raphaël Varane",
+    "Victor Lindelöf",
+    "Aymeric Laporte"
   ],
 
   MID: [
-    { id: "mid1", name: "Kevin De Bruyne", position: "MID", rating: 89 },
-    { id: "mid2", name: "Jude Bellingham", position: "MID", rating: 91 },
-    { id: "mid3", name: "Rodri", position: "MID", rating: 90 },
-    { id: "mid4", name: "Pedri", position: "MID", rating: 86 },
-    { id: "mid5", name: "Federico Valverde", position: "MID", rating: 88 },
-    { id: "mid6", name: "Bernardo Silva", position: "MID", rating: 88 }
+    "Zinedine Zidane",
+    "Xavi",
+    "Andrés Iniesta",
+    "Luka Modrić",
+    "Andrea Pirlo",
+    "Xabi Alonso",
+    "Clarence Seedorf",
+    "Patrick Vieira",
+    "Frank Lampard",
+    "Steven Gerrard",
+    "Paul Scholes",
+    "Roy Keane",
+    "Kaká",
+    "Ronaldinho",
+    "David Silva",
+    "Cesc Fàbregas",
+    "Mesut Özil",
+    "Toni Kroos",
+    "Kevin De Bruyne",
+    "Rodri",
+    "Jude Bellingham",
+    "Federico Valverde",
+    "Bernardo Silva",
+    "Pedri",
+    "Frenkie de Jong",
+    "Martin Ødegaard",
+    "Bruno Fernandes",
+    "Declan Rice",
+    "Joshua Kimmich",
+    "Ilkay Gündogan",
+    "Casemiro",
+    "N'Golo Kanté",
+    "Paul Pogba",
+    "Marco Verratti",
+    "Thiago Alcântara",
+    "Sergio Busquets",
+    "Jorginho",
+    "Fabinho",
+    "Thierry Henry",
+    "Michael Ballack",
+    "Bastian Schweinsteiger",
+    "Michael Essien",
+    "Yaya Touré",
+    "Claude Makélélé",
+    "Edgar Davids",
+    "Wesley Sneijder",
+    "Rivaldo",
+    "Juan Román Riquelme",
+    "Karel Poborský",
+    "Luis Figo",
+    "Rui Costa",
+    "Paul Gascoigne",
+    "Lothar Matthäus",
+    "Ruud Gullit",
+    "Socrates",
+    "Dunga",
+    "Kaká",
+    "Cafu",
+    "Zé Roberto",
+    "James Rodríguez",
+    "Christian Eriksen",
+    "Thomas Müller",
+    "Mason Mount",
+    "Dominik Szoboszlai",
+    "Eduardo Camavinga",
+    "Aurélien Tchouaméni",
+    "Enzo Fernández",
+    "Alexis Mac Allister",
+    "Nicolo Barella",
+    "Hakan Çalhanoğlu",
+    "Sandro Tonali"
   ],
 
   ATT: [
-    { id: "att1", name: "Kylian Mbappé", position: "ATT", rating: 91 },
-    { id: "att2", name: "Erling Haaland", position: "ATT", rating: 91 },
-    { id: "att3", name: "Mohamed Salah", position: "ATT", rating: 89 },
-    { id: "att4", name: "Vinícius Jr.", position: "ATT", rating: 90 },
-    { id: "att5", name: "Lamine Yamal", position: "ATT", rating: 86 },
-    { id: "att6", name: "Harry Kane", position: "ATT", rating: 90 }
+    "Pelé",
+    "Diego Maradona",
+    "Lionel Messi",
+    "Cristiano Ronaldo",
+    "Ronaldo Nazário",
+    "Romário",
+    "Johan Cruyff",
+    "Marco van Basten",
+    "George Best",
+    "Ferenc Puskás",
+    "Eusébio",
+    "Garrincha",
+    "Kenny Dalglish",
+    "Gabriel Batistuta",
+    "George Weah",
+    "Samuel Eto'o",
+    "Didier Drogba",
+    "Thierry Henry",
+    "Zlatan Ibrahimović",
+    "Luis Suárez",
+    "Neymar",
+    "Mohamed Salah",
+    "Kylian Mbappé",
+    "Erling Haaland",
+    "Vinícius Júnior",
+    "Harry Kane",
+    "Robert Lewandowski",
+    "Karim Benzema",
+    "Sadio Mané",
+    "Son Heung-min",
+    "Lautaro Martínez",
+    "Antoine Griezmann",
+    "Ousmane Dembélé",
+    "Riyad Mahrez",
+    "Raheem Sterling",
+    "Heung-min Son",
+    "Sergio Agüero",
+    "Wayne Rooney",
+    "Robin van Persie",
+    "Arjen Robben",
+    "Franck Ribéry",
+    "Nicolas Anelka",
+    "David Villa",
+    "Fernando Torres",
+    "Andriy Shevchenko",
+    "Filippo Inzaghi",
+    "Alessandro Del Piero",
+    "Francesco Totti",
+    "Roberto Baggio",
+    "Dennis Bergkamp",
+    "Eric Cantona",
+    "Alan Shearer",
+    "Michael Owen",
+    "Ruud van Nistelrooy",
+    "Hernán Crespo",
+    "Edinson Cavani",
+    "Carlos Tevez",
+    "Ángel Di María",
+    "Kaká",
+    "Rivaldo",
+    "Luis Figo",
+    "Salah",
+    "Lamine Yamal",
+    "Rafael Leão",
+    "Victor Osimhen",
+    "Khvicha Kvaratskhelia",
+    "Cole Palmer",
+    "Bukayo Saka",
+    "Phil Foden",
+    "Marcus Rashford",
+    "Romelu Lukaku",
+    "Dusan Vlahovic"
   ]
 };
 
-/* =========================
-   HELPERS
-========================= */
+/* =========================================================
+   BUILD DATABASE
+========================================================= */
+
+function createPlayers(names, position) {
+  const uniqueNames = [...new Set(names)];
+
+  return uniqueNames.map((name, index) => {
+    let rating;
+
+    if (
+      name === "Pelé" ||
+      name === "Diego Maradona"
+    ) {
+      rating = 98;
+    } else if (
+      name === "Lionel Messi" ||
+      name === "Cristiano Ronaldo" ||
+      name === "Ronaldo Nazário"
+    ) {
+      rating = 97;
+    } else {
+      rating =
+        84 +
+        ((index * 7) % 12) -
+        4;
+
+      rating = Math.max(
+        80,
+        Math.min(96, rating)
+      );
+    }
+
+    return {
+      id:
+        position.toLowerCase() +
+        (index + 1),
+
+      name,
+      position,
+      rating
+    };
+  });
+}
+
+playersDatabase.GK =
+  createPlayers(
+    playersDatabase.GK,
+    "GK"
+  );
+
+playersDatabase.DEF =
+  createPlayers(
+    playersDatabase.DEF,
+    "DEF"
+  );
+
+playersDatabase.MID =
+  createPlayers(
+    playersDatabase.MID,
+    "MID"
+  );
+
+playersDatabase.ATT =
+  createPlayers(
+    playersDatabase.ATT,
+    "ATT"
+  );
+
+console.log("PLAYER DATABASE READY");
+console.log(`GK: ${playersDatabase.GK.length}`);
+console.log(`DEF: ${playersDatabase.DEF.length}`);
+console.log(`MID: ${playersDatabase.MID.length}`);
+console.log(`ATT: ${playersDatabase.ATT.length}`);
+
+/* =========================================================
+   ROOM CODE
+========================================================= */
 
 function generateRoomCode() {
   let code;
 
   do {
-    code = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    code =
+      Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase();
   } while (rooms.has(code));
 
   return code;
 }
 
-function getRandomPlayer(position, usedPlayers) {
-  const available = playersDatabase[position].filter(
-    player => !usedPlayers.includes(player.id)
-  );
+/* =========================================================
+   RANDOM PLAYER
+========================================================= */
+
+function getRandomPlayer(
+  position,
+  usedPlayers
+) {
+  const available =
+    playersDatabase[position].filter(
+      player =>
+        !usedPlayers.includes(player.id)
+    );
 
   if (available.length === 0) {
     return null;
   }
 
   return available[
-    Math.floor(Math.random() * available.length)
+    Math.floor(
+      Math.random() *
+      available.length
+    )
   ];
 }
+
+/* =========================================================
+   CLEAR TIMER
+========================================================= */
 
 function clearAuctionTimer(room) {
   if (room.auctionTimer) {
@@ -97,8 +443,14 @@ function clearAuctionTimer(room) {
   }
 }
 
+/* =========================================================
+   PUBLIC PLAYER
+========================================================= */
+
 function publicPlayer(player) {
-  if (!player) return null;
+  if (!player) {
+    return null;
+  }
 
   return {
     id: player.id,
@@ -107,6 +459,10 @@ function publicPlayer(player) {
     rating: player.rating
   };
 }
+
+/* =========================================================
+   PUBLIC PLAYERS
+========================================================= */
 
 function publicPlayers(room) {
   return room.players.map(player => ({
@@ -117,43 +473,146 @@ function publicPlayers(room) {
   }));
 }
 
+/* =========================================================
+   SEND ROOM STATE
+========================================================= */
+
 function sendRoomState(roomCode) {
   const room = rooms.get(roomCode);
 
-  if (!room) return;
+  if (!room) {
+    return;
+  }
 
-  io.to(roomCode).emit("roomState", {
-    players: publicPlayers(room),
+  io.to(roomCode).emit(
+    "roomState",
+    {
+      players:
+        publicPlayers(room),
 
-    auction: room.auction
-      ? {
-          player: publicPlayer(room.auction.player),
-          position: room.auction.position,
-          currentBid: room.auction.currentBid,
-          currentBidderId: room.auction.currentBidderId,
-          turnPlayerId: room.auction.turnPlayerId,
-          timeLeft: room.auction.timeLeft
-        }
-      : null
+      auction:
+        room.auction
+          ? {
+              player:
+                publicPlayer(
+                  room.auction.player
+                ),
+
+              position:
+                room.auction.position,
+
+              currentBid:
+                room.auction.currentBid,
+
+              currentBidderId:
+                room.auction.currentBidderId,
+
+              turnPlayerId:
+                room.auction.turnPlayerId,
+
+              timeLeft:
+                room.auction.timeLeft
+            }
+          : null
+    }
+  );
+}
+
+/* =========================================================
+   RESET GAME
+========================================================= */
+
+function resetGame(room) {
+  clearAuctionTimer(room);
+
+  room.started = false;
+  room.auction = null;
+  room.usedPlayers = [];
+
+  room.positionRounds = {
+    GK: 1,
+    DEF: 4,
+    MID: 3,
+    ATT: 3
+  };
+
+  room.players.forEach(player => {
+    player.money = STARTING_MONEY;
+    player.team = [];
   });
 }
 
-/* =========================
+/* =========================================================
+   START NEW ROUND
+========================================================= */
+
+function startNewRound(roomCode) {
+  const room = rooms.get(roomCode);
+
+  if (!room) {
+    return;
+  }
+
+  if (room.players.length !== 2) {
+    return;
+  }
+
+  if (room.started) {
+    return;
+  }
+
+  resetGame(room);
+
+  room.rematchRequests = new Set();
+
+  room.started = true;
+
+  io.to(roomCode).emit(
+    "gameStarted",
+    {
+      players:
+        publicPlayers(room)
+    }
+  );
+
+  setTimeout(() => {
+    const currentRoom =
+      rooms.get(roomCode);
+
+    if (
+      currentRoom &&
+      currentRoom.started
+    ) {
+      startAuction(roomCode);
+    }
+  }, 1000);
+}
+
+/* =========================================================
    START AUCTION
-========================= */
+========================================================= */
 
 function startAuction(roomCode) {
   const room = rooms.get(roomCode);
 
-  if (!room) return;
+  if (!room) {
+    return;
+  }
 
   clearAuctionTimer(room);
 
-  const positions = ["GK", "DEF", "MID", "ATT"];
+  const positions = [
+    "GK",
+    "DEF",
+    "MID",
+    "ATT"
+  ];
 
-  const availablePositions = positions.filter(
-    position => room.positionRounds[position] > 0
-  );
+  const availablePositions =
+    positions.filter(
+      position =>
+        room.positionRounds[position] > 0
+    );
 
   if (availablePositions.length === 0) {
     finishGame(roomCode);
@@ -163,14 +622,16 @@ function startAuction(roomCode) {
   const position =
     availablePositions[
       Math.floor(
-        Math.random() * availablePositions.length
+        Math.random() *
+        availablePositions.length
       )
     ];
 
-  const player = getRandomPlayer(
-    position,
-    room.usedPlayers
-  );
+  const player =
+    getRandomPlayer(
+      position,
+      room.usedPlayers
+    );
 
   if (!player) {
     room.positionRounds[position] = 0;
@@ -183,19 +644,18 @@ function startAuction(roomCode) {
   const randomStartingPlayer =
     room.players[
       Math.floor(
-        Math.random() * room.players.length
+        Math.random() *
+        room.players.length
       )
     ];
 
   room.auction = {
-    player: player,
-    position: position,
-
+    player,
+    position,
     currentBid: 0,
     currentBidderId: null,
-
-    turnPlayerId: randomStartingPlayer.id,
-
+    turnPlayerId:
+      randomStartingPlayer.id,
     timeLeft: TURN_TIME
   };
 
@@ -204,112 +664,171 @@ function startAuction(roomCode) {
   startTurnTimer(roomCode);
 }
 
-/* =========================
+/* =========================================================
    TURN TIMER
-========================= */
+========================================================= */
 
 function startTurnTimer(roomCode) {
   const room = rooms.get(roomCode);
 
-  if (!room || !room.auction) return;
+  if (
+    !room ||
+    !room.auction
+  ) {
+    return;
+  }
 
   clearAuctionTimer(room);
 
-  room.auction.timeLeft = TURN_TIME;
+  room.auction.timeLeft =
+    TURN_TIME;
 
   sendRoomState(roomCode);
 
-  room.auctionTimer = setInterval(() => {
-    const currentRoom = rooms.get(roomCode);
+  room.auctionTimer =
+    setInterval(() => {
+      const currentRoom =
+        rooms.get(roomCode);
 
-    if (!currentRoom || !currentRoom.auction) {
-      clearAuctionTimer(room);
-      return;
-    }
+      if (
+        !currentRoom ||
+        !currentRoom.auction
+      ) {
+        return;
+      }
 
-    currentRoom.auction.timeLeft--;
+      currentRoom.auction.timeLeft--;
 
-    if (currentRoom.auction.timeLeft <= 0) {
-      clearAuctionTimer(currentRoom);
-      handlePass(roomCode);
-      return;
-    }
+      if (
+        currentRoom.auction.timeLeft <= 0
+      ) {
+        clearAuctionTimer(
+          currentRoom
+        );
 
-    sendRoomState(roomCode);
-  }, 1000);
+        handlePass(roomCode);
+        return;
+      }
+
+      sendRoomState(roomCode);
+    }, 1000);
 }
 
-/* =========================
+/* =========================================================
    MAKE BID
-========================= */
+========================================================= */
 
-function makeBid(roomCode, socketId, amount) {
+function makeBid(
+  roomCode,
+  socketId,
+  amount
+) {
   const room = rooms.get(roomCode);
 
-  if (!room || !room.auction) return;
+  if (
+    !room ||
+    !room.auction
+  ) {
+    return;
+  }
 
-  const auction = room.auction;
+  const auction =
+    room.auction;
 
-  if (auction.turnPlayerId !== socketId) {
+  if (
+    auction.turnPlayerId !==
+    socketId
+  ) {
     io.to(socketId).emit(
       "auctionError",
       "ليس دورك الآن"
     );
+
     return;
   }
 
-  const player = room.players.find(
-    p => p.id === socketId
-  );
+  const player =
+    room.players.find(
+      p => p.id === socketId
+    );
 
-  if (!player) return;
+  if (!player) {
+    return;
+  }
 
-  if (!Number.isInteger(amount) || amount <= 0) {
+  if (
+    !Number.isInteger(amount) ||
+    amount <= 0
+  ) {
     io.to(socketId).emit(
       "auctionError",
       "المبلغ غير صحيح"
     );
+
     return;
   }
 
-  if (amount <= auction.currentBid) {
+  if (
+    amount <=
+    auction.currentBid
+  ) {
     io.to(socketId).emit(
       "auctionError",
       "يجب أن تكون المزايدة أعلى من السعر الحالي"
     );
+
     return;
   }
 
-  if (amount > player.money) {
+  if (
+    amount > player.money
+  ) {
     io.to(socketId).emit(
       "auctionError",
       `رصيدك ${player.money}M فقط`
     );
+
     return;
   }
 
-  auction.currentBid = amount;
-  auction.currentBidderId = socketId;
+  auction.currentBid =
+    amount;
 
-  const opponent = room.players.find(
-    p => p.id !== socketId
-  );
+  auction.currentBidderId =
+    socketId;
 
-  if (!opponent) return;
+  const opponent =
+    room.players.find(
+      p => p.id !== socketId
+    );
 
-  auction.turnPlayerId = opponent.id;
+  if (!opponent) {
+    return;
+  }
+
+  auction.turnPlayerId =
+    opponent.id;
 
   startTurnTimer(roomCode);
 }
 
-/* =========================
+/* =========================================================
    +1M
-========================= */
+========================================================= */
 
-function bidOne(roomCode, socketId) {
-  const room = rooms.get(roomCode);
+function bidOne(
+  roomCode,
+  socketId
+) {
+  const room =
+    rooms.get(roomCode);
 
-  if (!room || !room.auction) return;
+  if (
+    !room ||
+    !room.auction
+  ) {
+    return;
+  }
 
   const newBid =
     room.auction.currentBid + 1;
@@ -321,18 +840,27 @@ function bidOne(roomCode, socketId) {
   );
 }
 
-/* =========================
+/* =========================================================
    CUSTOM BID
-========================= */
+========================================================= */
 
-function customBid(roomCode, socketId, amount) {
-  const value = Number(amount);
+function customBid(
+  roomCode,
+  socketId,
+  amount
+) {
+  const value =
+    Number(amount);
 
-  if (!Number.isInteger(value) || value <= 0) {
+  if (
+    !Number.isInteger(value) ||
+    value <= 0
+  ) {
     io.to(socketId).emit(
       "auctionError",
       "اكتب رقم صحيح بالمليون"
     );
+
     return;
   }
 
@@ -343,18 +871,25 @@ function customBid(roomCode, socketId, amount) {
   );
 }
 
-/* =========================
+/* =========================================================
    PASS
-========================= */
+========================================================= */
 
 function handlePass(roomCode) {
-  const room = rooms.get(roomCode);
+  const room =
+    rooms.get(roomCode);
 
-  if (!room || !room.auction) return;
+  if (
+    !room ||
+    !room.auction
+  ) {
+    return;
+  }
 
   clearAuctionTimer(room);
 
-  const auction = room.auction;
+  const auction =
+    room.auction;
 
   const lastBidderId =
     auction.currentBidderId;
@@ -365,52 +900,50 @@ function handlePass(roomCode) {
   let winner;
   let loser;
 
-  /*
-    الحالة 1:
-    لا توجد أي مزايدة.
-
-    اللاعب الذي لم يضغط سيب
-    يحصل على اللاعب مجانًا.
-  */
-
   if (!lastBidderId) {
-    winner = room.players.find(
-      p => p.id !== currentTurnPlayerId
-    );
+    winner =
+      room.players.find(
+        p =>
+          p.id !==
+          currentTurnPlayerId
+      );
 
-    loser = room.players.find(
-      p => p.id === currentTurnPlayerId
-    );
+    loser =
+      room.players.find(
+        p =>
+          p.id ===
+          currentTurnPlayerId
+      );
+  } else {
+    winner =
+      room.players.find(
+        p =>
+          p.id ===
+          lastBidderId
+      );
+
+    loser =
+      room.players.find(
+        p =>
+          p.id !==
+          lastBidderId
+      );
   }
 
-  /*
-    الحالة 2:
-    توجد مزايدة.
-
-    صاحب آخر مزايدة يفوز.
-    اللاعب الآخر يخسر.
-  */
-
-  else {
-    winner = room.players.find(
-      p => p.id === lastBidderId
-    );
-
-    loser = room.players.find(
-      p => p.id !== lastBidderId
-    );
+  if (
+    !winner ||
+    !loser
+  ) {
+    return;
   }
 
-  if (!winner || !loser) return;
+  const price =
+    auction.currentBid;
 
-  const price = auction.currentBid;
-
-  /*
-    حماية مهمة:
-    الفائز فقط هو الذي يدفع.
-  */
-
-  if (price > winner.money) {
+  if (
+    price >
+    winner.money
+  ) {
     io.to(winner.id).emit(
       "auctionError",
       "رصيدك لا يكفي لهذه الصفقة"
@@ -419,26 +952,13 @@ function handlePass(roomCode) {
     return;
   }
 
-  /*
-    خصم السعر من الفائز فقط
-  */
-
   winner.money =
     winner.money - price;
-
-  /*
-    إضافة اللاعب الأصلي للفائز
-  */
 
   winner.team.push({
     ...auction.player,
     boughtFor: price
   });
-
-  /*
-    اللاعب العشوائي للخاسر
-    من نفس المركز
-  */
 
   const replacement =
     getRandomPlayer(
@@ -447,7 +967,6 @@ function handlePass(roomCode) {
     );
 
   if (replacement) {
-
     room.usedPlayers.push(
       replacement.id
     );
@@ -459,30 +978,28 @@ function handlePass(roomCode) {
     });
   }
 
-  /*
-    انتهت جولة هذا المركز
-  */
-
   room.positionRounds[
     auction.position
   ]--;
 
-  /*
-    حفظ معلومات النتيجة
-    قبل الانتقال للمزاد التالي
-  */
-
   const result = {
-    winnerId: winner.id,
-    loserId: loser.id,
+    winnerId:
+      winner.id,
+
+    loserId:
+      loser.id,
 
     soldPlayer:
-      publicPlayer(auction.player),
+      publicPlayer(
+        auction.player
+      ),
 
-    price: price,
+    price,
 
     replacement:
-      publicPlayer(replacement),
+      publicPlayer(
+        replacement
+      ),
 
     winnerMoney:
       winner.money,
@@ -499,38 +1016,23 @@ function handlePass(roomCode) {
 
   room.auction = null;
 
-  /*
-    إرسال النتيجة للاثنين
-  */
-
   io.to(roomCode).emit(
     "auctionFinished",
     result
   );
 
-  /*
-    تحديث الرصيد والفرق
-  */
-
   sendRoomState(roomCode);
-
-  /*
-    هل اكتمل الفريقان؟
-  */
 
   const bothComplete =
     room.players.every(
-      p => p.team.length >= 11
+      p =>
+        p.team.length >= 11
     );
 
   if (bothComplete) {
     finishGame(roomCode);
     return;
   }
-
-  /*
-    بدء المزاد التالي
-  */
 
   setTimeout(() => {
     const currentRoom =
@@ -545,98 +1047,222 @@ function handlePass(roomCode) {
   }, 2500);
 }
 
-/* =========================
+/* =========================================================
    FINISH GAME
-========================= */
+========================================================= */
 
 function finishGame(roomCode) {
-  const room = rooms.get(roomCode);
+  const room =
+    rooms.get(roomCode);
 
-  if (!room) return;
+  if (!room) {
+    return;
+  }
 
   clearAuctionTimer(room);
 
   room.auction = null;
+
   room.started = false;
 
+  room.rematchRequests =
+    new Set();
+
   const results =
-    room.players.map(player => {
+    room.players.map(
+      player => {
+        const totalRating =
+          player.team.reduce(
+            (total, p) =>
+              total +
+              Number(p.rating || 0),
+            0
+          );
 
-      const totalRating =
-        player.team.reduce(
-          (total, p) =>
-            total + p.rating,
-          0
-        );
+        const averageRating =
+          player.team.length > 0
+            ? totalRating /
+              player.team.length
+            : 0;
 
-      const averageRating =
-        player.team.length > 0
-          ? totalRating /
-            player.team.length
-          : 0;
+        return {
+          id:
+            player.id,
 
-      return {
-        id: player.id,
-        name: player.name,
-        money: player.money,
-        team: player.team,
-        rating:
-          Number(
-            averageRating.toFixed(1)
-          )
-      };
-    });
+          name:
+            player.name,
+
+          money:
+            player.money,
+
+          team:
+            player.team,
+
+          rating:
+            Number(
+              averageRating.toFixed(1)
+            )
+        };
+      }
+    );
 
   let winnerId = null;
 
-  if (
-    results.length === 2
-  ) {
+  if (results.length === 2) {
     if (
       results[0].rating >
       results[1].rating
     ) {
-      winnerId = results[0].id;
-    }
-
-    else if (
+      winnerId =
+        results[0].id;
+    } else if (
       results[1].rating >
       results[0].rating
     ) {
-      winnerId = results[1].id;
+      winnerId =
+        results[1].id;
     }
   }
 
   io.to(roomCode).emit(
     "gameFinished",
     {
-      players: results,
-      winnerId
+      players:
+        results,
+
+      winnerId,
+
+      canPlayAgain:
+        true
     }
+  );
+
+  console.log(
+    `Game finished in room ${roomCode}. Waiting for rematch.`
   );
 }
 
-/* =========================
+/* =========================================================
+   REQUEST PLAY AGAIN
+========================================================= */
+
+function requestPlayAgain(
+  roomCode,
+  socketId
+) {
+  const room =
+    rooms.get(roomCode);
+
+  if (!room) {
+    io.to(socketId).emit(
+      "auctionError",
+      "الغرفة غير موجودة"
+    );
+
+    return;
+  }
+
+  if (
+    room.players.length !== 2
+  ) {
+    io.to(socketId).emit(
+      "auctionError",
+      "يجب أن يكون هناك لاعبان"
+    );
+
+    return;
+  }
+
+  if (room.started) {
+    io.to(socketId).emit(
+      "auctionError",
+      "الجولة الحالية لم تنتهِ بعد"
+    );
+
+    return;
+  }
+
+  const player =
+    room.players.find(
+      p =>
+        p.id === socketId
+    );
+
+  if (!player) {
+    io.to(socketId).emit(
+      "auctionError",
+      "أنت لست داخل هذه الغرفة"
+    );
+
+    return;
+  }
+
+  if (
+    !room.rematchRequests
+  ) {
+    room.rematchRequests =
+      new Set();
+  }
+
+  /*
+    اللاعب وافق على اللعب مرة أخرى.
+  */
+
+  room.rematchRequests.add(
+    socketId
+  );
+
+  const requested =
+    room.rematchRequests.size;
+
+  const total =
+    room.players.length;
+
+  const ready =
+    requested === total;
+
+  /*
+    إرسال حالة الانتظار للجميع.
+  */
+
+  io.to(roomCode).emit(
+    "rematchStatus",
+    {
+      requested,
+      total,
+      ready
+    }
+  );
+
+  /*
+    اللاعبان وافقا.
+    نبدأ الجولة الجديدة تلقائيًا.
+  */
+
+  if (ready) {
+    startNewRound(roomCode);
+  }
+}
+
+/* =========================================================
    SOCKET CONNECTION
-========================= */
+========================================================= */
 
 io.on(
   "connection",
   socket => {
-
     console.log(
       "Player connected:",
       socket.id
     );
 
-    /* =====================
+    /* =====================================================
        CREATE ROOM
-    ===================== */
+    ===================================================== */
 
     socket.on(
       "createRoom",
       ({ name }) => {
-
         if (
           !name ||
           !name.trim()
@@ -645,6 +1271,7 @@ io.on(
             "errorMessage",
             "اكتب اسمك الأول"
           );
+
           return;
         }
 
@@ -652,35 +1279,46 @@ io.on(
           generateRoomCode();
 
         const room = {
+          host:
+            socket.id,
 
-          host: socket.id,
-
-          started: false,
+          started:
+            false,
 
           players: [
             {
-              id: socket.id,
-              name: name.trim(),
+              id:
+                socket.id,
+
+              name:
+                name.trim(),
 
               money:
                 STARTING_MONEY,
 
-              team: []
+              team:
+                []
             }
           ],
 
-          usedPlayers: [],
+          usedPlayers:
+            [],
 
-          auction: null,
+          auction:
+            null,
 
-          auctionTimer: null,
+          auctionTimer:
+            null,
 
           positionRounds: {
             GK: 1,
             DEF: 4,
             MID: 3,
             ATT: 3
-          }
+          },
+
+          rematchRequests:
+            new Set()
         };
 
         rooms.set(
@@ -708,22 +1346,24 @@ io.on(
             roomCode,
 
             players:
-              publicPlayers(room),
+              publicPlayers(
+                room
+              ),
 
-            isHost: true
+            isHost:
+              true
           }
         );
       }
     );
 
-    /* =====================
+    /* =====================================================
        JOIN ROOM
-    ===================== */
+    ===================================================== */
 
     socket.on(
       "joinRoom",
       ({ name, roomCode }) => {
-
         if (
           !name ||
           !name.trim()
@@ -732,6 +1372,7 @@ io.on(
             "errorMessage",
             "اكتب اسمك الأول"
           );
+
           return;
         }
 
@@ -743,6 +1384,7 @@ io.on(
             "errorMessage",
             "اكتب كود الغرفة"
           );
+
           return;
         }
 
@@ -759,16 +1401,19 @@ io.on(
             "errorMessage",
             "الغرفة غير موجودة"
           );
+
           return;
         }
 
         if (
-          room.players.length >= 2
+          room.players.length >=
+          2
         ) {
           socket.emit(
             "errorMessage",
             "الغرفة ممتلئة"
           );
+
           return;
         }
 
@@ -777,17 +1422,22 @@ io.on(
             "errorMessage",
             "اللعبة بدأت بالفعل"
           );
+
           return;
         }
 
         const player = {
-          id: socket.id,
-          name: name.trim(),
+          id:
+            socket.id,
+
+          name:
+            name.trim(),
 
           money:
             STARTING_MONEY,
 
-          team: []
+          team:
+            []
         };
 
         room.players.push(
@@ -809,12 +1459,16 @@ io.on(
         socket.emit(
           "roomJoined",
           {
-            roomCode: code,
+            roomCode:
+              code,
 
             players:
-              publicPlayers(room),
+              publicPlayers(
+                room
+              ),
 
-            isHost: false
+            isHost:
+              false
           }
         );
 
@@ -822,20 +1476,21 @@ io.on(
           "playersUpdated",
           {
             players:
-              publicPlayers(room)
+              publicPlayers(
+                room
+              )
           }
         );
       }
     );
 
-    /* =====================
+    /* =====================================================
        START GAME
-    ===================== */
+    ===================================================== */
 
     socket.on(
       "startGame",
       () => {
-
         const roomCode =
           socket.data.roomCode;
 
@@ -847,6 +1502,7 @@ io.on(
             "auctionError",
             "الغرفة غير موجودة"
           );
+
           return;
         }
 
@@ -858,16 +1514,19 @@ io.on(
             "auctionError",
             "المضيف فقط يستطيع بدء اللعبة"
           );
+
           return;
         }
 
         if (
-          room.players.length !== 2
+          room.players.length !==
+          2
         ) {
           socket.emit(
             "auctionError",
             "يجب أن يكون هناك لاعبان"
           );
+
           return;
         }
 
@@ -875,54 +1534,45 @@ io.on(
           return;
         }
 
-        room.started = true;
-
-        room.usedPlayers = [];
-
-        room.positionRounds = {
-          GK: 1,
-          DEF: 4,
-          MID: 3,
-          ATT: 3
-        };
-
-        room.players.forEach(
-          player => {
-
-            player.money =
-              STARTING_MONEY;
-
-            player.team = [];
-          }
-        );
-
-        io.to(roomCode).emit(
-          "gameStarted",
-          {
-            players:
-              publicPlayers(room)
-          }
-        );
-
-        setTimeout(
-          () => {
-            startAuction(
-              roomCode
-            );
-          },
-          1000
+        startNewRound(
+          roomCode
         );
       }
     );
 
-    /* =====================
+    /* =====================================================
+       PLAY AGAIN
+    ===================================================== */
+
+    socket.on(
+      "playAgain",
+      () => {
+        const roomCode =
+          socket.data.roomCode;
+
+        if (!roomCode) {
+          socket.emit(
+            "auctionError",
+            "أنت لست داخل غرفة"
+          );
+
+          return;
+        }
+
+        requestPlayAgain(
+          roomCode,
+          socket.id
+        );
+      }
+    );
+
+    /* =====================================================
        +1M
-    ===================== */
+    ===================================================== */
 
     socket.on(
       "bidOne",
       () => {
-
         const roomCode =
           socket.data.roomCode;
 
@@ -933,14 +1583,13 @@ io.on(
       }
     );
 
-    /* =====================
+    /* =====================================================
        CUSTOM BID
-    ===================== */
+    ===================================================== */
 
     socket.on(
       "customBid",
       ({ amount }) => {
-
         const roomCode =
           socket.data.roomCode;
 
@@ -952,14 +1601,13 @@ io.on(
       }
     );
 
-    /* =====================
+    /* =====================================================
        PASS
-    ===================== */
+    ===================================================== */
 
     socket.on(
       "passAuction",
       () => {
-
         const roomCode =
           socket.data.roomCode;
 
@@ -969,14 +1617,13 @@ io.on(
       }
     );
 
-    /* =====================
+    /* =====================================================
        DISCONNECT
-    ===================== */
+    ===================================================== */
 
     socket.on(
       "disconnect",
       () => {
-
         console.log(
           "Player disconnected:",
           socket.id
@@ -1012,12 +1659,14 @@ io.on(
   }
 );
 
-/* =========================
+/* =========================================================
    EXPRESS
-========================= */
+========================================================= */
 
 app.use(
-  express.static(__dirname)
+  express.static(
+    __dirname
+  )
 );
 
 app.get(
@@ -1032,18 +1681,16 @@ app.get(
   }
 );
 
-/* =========================
+/* =========================================================
    SERVER
-========================= */
+========================================================= */
 
 server.listen(
   PORT,
   "0.0.0.0",
   () => {
-
     console.log(
       `EMBABI Online Server running on port ${PORT}`
     );
-
   }
 );
