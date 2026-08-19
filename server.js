@@ -6,16 +6,41 @@ const path = require("path");
 const app = express();
 const server = http.createServer(app);
 
+/* =========================================================
+   SOCKET.IO
+========================================================= */
+
 const io = new Server(server, {
   cors: {
-    origin: "*"
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
+
+  transports: ["websocket", "polling"],
+
+  pingInterval: 25000,
+  pingTimeout: 60000,
+
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000,
+    skipMiddlewares: true
   }
 });
 
-const PORT = 3000;
+/* =========================================================
+   SERVER SETTINGS
+========================================================= */
+
+const PORT = process.env.PORT || 3000;
+
 const STARTING_MONEY = 200;
 const TURN_TIME = 20;
 
+/*
+  مهم:
+  الغرف موجودة في ذاكرة السيرفر.
+  لذلك لازم يكون التطبيق شغال في Instance واحدة.
+*/
 const rooms = new Map();
 
 /* =========================================================
@@ -157,7 +182,6 @@ const playersDatabase = {
     "Mats Hummels",
     "Niklas Süle",
     "Jerome Boateng",
-    "Raphaël Varane",
     "Victor Lindelöf",
     "Aymeric Laporte"
   ],
@@ -219,8 +243,6 @@ const playersDatabase = {
     "Ruud Gullit",
     "Socrates",
     "Dunga",
-    "Kaká",
-    "Cafu",
     "Zé Roberto",
     "James Rodríguez",
     "Christian Eriksen",
@@ -272,7 +294,6 @@ const playersDatabase = {
     "Ousmane Dembélé",
     "Riyad Mahrez",
     "Raheem Sterling",
-    "Heung-min Son",
     "Sergio Agüero",
     "Wayne Rooney",
     "Robin van Persie",
@@ -295,10 +316,6 @@ const playersDatabase = {
     "Edinson Cavani",
     "Carlos Tevez",
     "Ángel Di María",
-    "Kaká",
-    "Rivaldo",
-    "Luis Figo",
-    "Salah",
     "Lamine Yamal",
     "Rafael Leão",
     "Victor Osimhen",
@@ -322,10 +339,7 @@ function createPlayers(names, position) {
   return uniqueNames.map((name, index) => {
     let rating;
 
-    if (
-      name === "Pelé" ||
-      name === "Diego Maradona"
-    ) {
+    if (name === "Pelé" || name === "Diego Maradona") {
       rating = 98;
     } else if (
       name === "Lionel Messi" ||
@@ -334,22 +348,12 @@ function createPlayers(names, position) {
     ) {
       rating = 97;
     } else {
-      rating =
-        84 +
-        ((index * 7) % 12) -
-        4;
-
-      rating = Math.max(
-        80,
-        Math.min(96, rating)
-      );
+      rating = 84 + ((index * 7) % 12) - 4;
+      rating = Math.max(80, Math.min(96, rating));
     }
 
     return {
-      id:
-        position.toLowerCase() +
-        (index + 1),
-
+      id: position.toLowerCase() + (index + 1),
       name,
       position,
       rating
@@ -357,35 +361,18 @@ function createPlayers(names, position) {
   });
 }
 
-playersDatabase.GK =
-  createPlayers(
-    playersDatabase.GK,
-    "GK"
-  );
+playersDatabase.GK = createPlayers(playersDatabase.GK, "GK");
+playersDatabase.DEF = createPlayers(playersDatabase.DEF, "DEF");
+playersDatabase.MID = createPlayers(playersDatabase.MID, "MID");
+playersDatabase.ATT = createPlayers(playersDatabase.ATT, "ATT");
 
-playersDatabase.DEF =
-  createPlayers(
-    playersDatabase.DEF,
-    "DEF"
-  );
-
-playersDatabase.MID =
-  createPlayers(
-    playersDatabase.MID,
-    "MID"
-  );
-
-playersDatabase.ATT =
-  createPlayers(
-    playersDatabase.ATT,
-    "ATT"
-  );
-
+console.log("=================================");
 console.log("PLAYER DATABASE READY");
-console.log(`GK: ${playersDatabase.GK.length}`);
+console.log(`GK:  ${playersDatabase.GK.length}`);
 console.log(`DEF: ${playersDatabase.DEF.length}`);
 console.log(`MID: ${playersDatabase.MID.length}`);
 console.log(`ATT: ${playersDatabase.ATT.length}`);
+console.log("=================================");
 
 /* =========================================================
    ROOM CODE
@@ -395,11 +382,10 @@ function generateRoomCode() {
   let code;
 
   do {
-    code =
-      Math.random()
-        .toString(36)
-        .substring(2, 8)
-        .toUpperCase();
+    code = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase();
   } while (rooms.has(code));
 
   return code;
@@ -409,33 +395,33 @@ function generateRoomCode() {
    RANDOM PLAYER
 ========================================================= */
 
-function getRandomPlayer(
-  position,
-  usedPlayers
-) {
-  const available =
-    playersDatabase[position].filter(
-      player =>
-        !usedPlayers.includes(player.id)
-    );
+function getRandomPlayer(position, usedPlayers) {
+  const list = playersDatabase[position];
+
+  if (!list || list.length === 0) {
+    return null;
+  }
+
+  const available = list.filter(
+    player => !usedPlayers.includes(player.id)
+  );
 
   if (available.length === 0) {
     return null;
   }
 
   return available[
-    Math.floor(
-      Math.random() *
-      available.length
-    )
+    Math.floor(Math.random() * available.length)
   ];
 }
 
 /* =========================================================
-   CLEAR TIMER
+   TIMER
 ========================================================= */
 
 function clearAuctionTimer(room) {
+  if (!room) return;
+
   if (room.auctionTimer) {
     clearInterval(room.auctionTimer);
     clearTimeout(room.auctionTimer);
@@ -448,9 +434,7 @@ function clearAuctionTimer(room) {
 ========================================================= */
 
 function publicPlayer(player) {
-  if (!player) {
-    return null;
-  }
+  if (!player) return null;
 
   return {
     id: player.id,
@@ -469,7 +453,8 @@ function publicPlayers(room) {
     id: player.id,
     name: player.name,
     money: player.money,
-    team: player.team
+    team: player.team,
+    connected: player.connected !== false
   }));
 }
 
@@ -480,42 +465,24 @@ function publicPlayers(room) {
 function sendRoomState(roomCode) {
   const room = rooms.get(roomCode);
 
-  if (!room) {
-    return;
-  }
+  if (!room) return;
 
-  io.to(roomCode).emit(
-    "roomState",
-    {
-      players:
-        publicPlayers(room),
+  io.to(roomCode).emit("roomState", {
+    roomCode,
 
-      auction:
-        room.auction
-          ? {
-              player:
-                publicPlayer(
-                  room.auction.player
-                ),
+    players: publicPlayers(room),
 
-              position:
-                room.auction.position,
-
-              currentBid:
-                room.auction.currentBid,
-
-              currentBidderId:
-                room.auction.currentBidderId,
-
-              turnPlayerId:
-                room.auction.turnPlayerId,
-
-              timeLeft:
-                room.auction.timeLeft
-            }
-          : null
-    }
-  );
+    auction: room.auction
+      ? {
+          player: publicPlayer(room.auction.player),
+          position: room.auction.position,
+          currentBid: room.auction.currentBid,
+          currentBidderId: room.auction.currentBidderId,
+          turnPlayerId: room.auction.turnPlayerId,
+          timeLeft: room.auction.timeLeft
+        }
+      : null
+  });
 }
 
 /* =========================================================
@@ -536,6 +503,8 @@ function resetGame(room) {
     ATT: 3
   };
 
+  room.rematchRequests = new Set();
+
   room.players.forEach(player => {
     player.money = STARTING_MONEY;
     player.team = [];
@@ -543,15 +512,13 @@ function resetGame(room) {
 }
 
 /* =========================================================
-   START NEW ROUND
+   START ROUND
 ========================================================= */
 
 function startNewRound(roomCode) {
   const room = rooms.get(roomCode);
 
-  if (!room) {
-    return;
-  }
+  if (!room) return;
 
   if (room.players.length !== 2) {
     return;
@@ -563,26 +530,18 @@ function startNewRound(roomCode) {
 
   resetGame(room);
 
-  room.rematchRequests = new Set();
-
   room.started = true;
 
-  io.to(roomCode).emit(
-    "gameStarted",
-    {
-      players:
-        publicPlayers(room)
-    }
-  );
+  io.to(roomCode).emit("gameStarted", {
+    players: publicPlayers(room)
+  });
+
+  sendRoomState(roomCode);
 
   setTimeout(() => {
-    const currentRoom =
-      rooms.get(roomCode);
+    const currentRoom = rooms.get(roomCode);
 
-    if (
-      currentRoom &&
-      currentRoom.started
-    ) {
+    if (currentRoom && currentRoom.started) {
       startAuction(roomCode);
     }
   }, 1000);
@@ -595,43 +554,32 @@ function startNewRound(roomCode) {
 function startAuction(roomCode) {
   const room = rooms.get(roomCode);
 
-  if (!room) {
+  if (!room || !room.started) {
     return;
   }
 
   clearAuctionTimer(room);
 
-  const positions = [
-    "GK",
-    "DEF",
-    "MID",
-    "ATT"
-  ];
+  const positions = ["GK", "DEF", "MID", "ATT"];
 
-  const availablePositions =
-    positions.filter(
-      position =>
-        room.positionRounds[position] > 0
-    );
+  const availablePositions = positions.filter(
+    position => room.positionRounds[position] > 0
+  );
 
   if (availablePositions.length === 0) {
     finishGame(roomCode);
     return;
   }
 
-  const position =
+  let position =
     availablePositions[
-      Math.floor(
-        Math.random() *
-        availablePositions.length
-      )
+      Math.floor(Math.random() * availablePositions.length)
     ];
 
-  const player =
-    getRandomPlayer(
-      position,
-      room.usedPlayers
-    );
+  let player = getRandomPlayer(
+    position,
+    room.usedPlayers
+  );
 
   if (!player) {
     room.positionRounds[position] = 0;
@@ -641,12 +589,9 @@ function startAuction(roomCode) {
 
   room.usedPlayers.push(player.id);
 
-  const randomStartingPlayer =
+  const startingPlayer =
     room.players[
-      Math.floor(
-        Math.random() *
-        room.players.length
-      )
+      Math.floor(Math.random() * room.players.length)
     ];
 
   room.auction = {
@@ -654,8 +599,7 @@ function startAuction(roomCode) {
     position,
     currentBid: 0,
     currentBidderId: null,
-    turnPlayerId:
-      randomStartingPlayer.id,
+    turnPlayerId: startingPlayer.id,
     timeLeft: TURN_TIME
   };
 
@@ -665,210 +609,136 @@ function startAuction(roomCode) {
 }
 
 /* =========================================================
-   TURN TIMER
+   TIMER
 ========================================================= */
 
 function startTurnTimer(roomCode) {
   const room = rooms.get(roomCode);
 
-  if (
-    !room ||
-    !room.auction
-  ) {
+  if (!room || !room.auction) {
     return;
   }
 
   clearAuctionTimer(room);
 
-  room.auction.timeLeft =
-    TURN_TIME;
+  room.auction.timeLeft = TURN_TIME;
 
   sendRoomState(roomCode);
 
-  room.auctionTimer =
-    setInterval(() => {
-      const currentRoom =
-        rooms.get(roomCode);
+  room.auctionTimer = setInterval(() => {
+    const currentRoom = rooms.get(roomCode);
 
-      if (
-        !currentRoom ||
-        !currentRoom.auction
-      ) {
-        return;
-      }
+    if (!currentRoom || !currentRoom.auction) {
+      return;
+    }
 
-      currentRoom.auction.timeLeft--;
+    currentRoom.auction.timeLeft--;
 
-      if (
-        currentRoom.auction.timeLeft <= 0
-      ) {
-        clearAuctionTimer(
-          currentRoom
-        );
+    if (currentRoom.auction.timeLeft <= 0) {
+      clearAuctionTimer(currentRoom);
+      handlePass(roomCode);
+      return;
+    }
 
-        handlePass(roomCode);
-        return;
-      }
-
-      sendRoomState(roomCode);
-    }, 1000);
+    sendRoomState(roomCode);
+  }, 1000);
 }
 
 /* =========================================================
-   MAKE BID
+   BID
 ========================================================= */
 
-function makeBid(
-  roomCode,
-  socketId,
-  amount
-) {
+function makeBid(roomCode, socketId, amount) {
   const room = rooms.get(roomCode);
 
-  if (
-    !room ||
-    !room.auction
-  ) {
+  if (!room || !room.auction) {
     return;
   }
 
-  const auction =
-    room.auction;
+  const auction = room.auction;
 
-  if (
-    auction.turnPlayerId !==
-    socketId
-  ) {
+  if (auction.turnPlayerId !== socketId) {
     io.to(socketId).emit(
       "auctionError",
       "ليس دورك الآن"
     );
-
     return;
   }
 
-  const player =
-    room.players.find(
-      p => p.id === socketId
-    );
+  const player = room.players.find(
+    p => p.id === socketId
+  );
 
-  if (!player) {
-    return;
-  }
+  if (!player) return;
 
-  if (
-    !Number.isInteger(amount) ||
-    amount <= 0
-  ) {
+  if (!Number.isInteger(amount) || amount <= 0) {
     io.to(socketId).emit(
       "auctionError",
       "المبلغ غير صحيح"
     );
-
     return;
   }
 
-  if (
-    amount <=
-    auction.currentBid
-  ) {
+  if (amount <= auction.currentBid) {
     io.to(socketId).emit(
       "auctionError",
       "يجب أن تكون المزايدة أعلى من السعر الحالي"
     );
-
     return;
   }
 
-  if (
-    amount > player.money
-  ) {
+  if (amount > player.money) {
     io.to(socketId).emit(
       "auctionError",
       `رصيدك ${player.money}M فقط`
     );
-
     return;
   }
 
-  auction.currentBid =
-    amount;
+  auction.currentBid = amount;
+  auction.currentBidderId = socketId;
 
-  auction.currentBidderId =
-    socketId;
+  const opponent = room.players.find(
+    p => p.id !== socketId
+  );
 
-  const opponent =
-    room.players.find(
-      p => p.id !== socketId
-    );
+  if (!opponent) return;
 
-  if (!opponent) {
-    return;
-  }
-
-  auction.turnPlayerId =
-    opponent.id;
+  auction.turnPlayerId = opponent.id;
 
   startTurnTimer(roomCode);
 }
 
 /* =========================================================
-   +1M
+   +1
 ========================================================= */
 
-function bidOne(
-  roomCode,
-  socketId
-) {
-  const room =
-    rooms.get(roomCode);
+function bidOne(roomCode, socketId) {
+  const room = rooms.get(roomCode);
 
-  if (
-    !room ||
-    !room.auction
-  ) {
-    return;
-  }
+  if (!room || !room.auction) return;
 
-  const newBid =
-    room.auction.currentBid + 1;
+  const newBid = room.auction.currentBid + 1;
 
-  makeBid(
-    roomCode,
-    socketId,
-    newBid
-  );
+  makeBid(roomCode, socketId, newBid);
 }
 
 /* =========================================================
    CUSTOM BID
 ========================================================= */
 
-function customBid(
-  roomCode,
-  socketId,
-  amount
-) {
-  const value =
-    Number(amount);
+function customBid(roomCode, socketId, amount) {
+  const value = Number(amount);
 
-  if (
-    !Number.isInteger(value) ||
-    value <= 0
-  ) {
+  if (!Number.isInteger(value) || value <= 0) {
     io.to(socketId).emit(
       "auctionError",
       "اكتب رقم صحيح بالمليون"
     );
-
     return;
   }
 
-  makeBid(
-    roomCode,
-    socketId,
-    value
-  );
+  makeBid(roomCode, socketId, value);
 }
 
 /* =========================================================
@@ -876,20 +746,15 @@ function customBid(
 ========================================================= */
 
 function handlePass(roomCode) {
-  const room =
-    rooms.get(roomCode);
+  const room = rooms.get(roomCode);
 
-  if (
-    !room ||
-    !room.auction
-  ) {
+  if (!room || !room.auction) {
     return;
   }
 
   clearAuctionTimer(room);
 
-  const auction =
-    room.auction;
+  const auction = room.auction;
 
   const lastBidderId =
     auction.currentBidderId;
@@ -901,75 +766,51 @@ function handlePass(roomCode) {
   let loser;
 
   if (!lastBidderId) {
-    winner =
-      room.players.find(
-        p =>
-          p.id !==
-          currentTurnPlayerId
-      );
+    winner = room.players.find(
+      p => p.id !== currentTurnPlayerId
+    );
 
-    loser =
-      room.players.find(
-        p =>
-          p.id ===
-          currentTurnPlayerId
-      );
+    loser = room.players.find(
+      p => p.id === currentTurnPlayerId
+    );
   } else {
-    winner =
-      room.players.find(
-        p =>
-          p.id ===
-          lastBidderId
-      );
+    winner = room.players.find(
+      p => p.id === lastBidderId
+    );
 
-    loser =
-      room.players.find(
-        p =>
-          p.id !==
-          lastBidderId
-      );
+    loser = room.players.find(
+      p => p.id !== lastBidderId
+    );
   }
 
-  if (
-    !winner ||
-    !loser
-  ) {
+  if (!winner || !loser) {
     return;
   }
 
-  const price =
-    auction.currentBid;
+  const price = auction.currentBid;
 
-  if (
-    price >
-    winner.money
-  ) {
+  if (price > winner.money) {
     io.to(winner.id).emit(
       "auctionError",
       "رصيدك لا يكفي لهذه الصفقة"
     );
-
     return;
   }
 
-  winner.money =
-    winner.money - price;
+  winner.money -= price;
 
   winner.team.push({
     ...auction.player,
     boughtFor: price
   });
 
-  const replacement =
-    getRandomPlayer(
-      auction.position,
-      room.usedPlayers
-    );
+  const replacement = getRandomPlayer(
+    auction.position,
+    room.usedPlayers
+  );
 
   if (replacement) {
-    room.usedPlayers.push(
-      replacement.id
-    );
+    room.usedPlayers.push(replacement.id);
 
     loser.team.push({
       ...replacement,
@@ -978,40 +819,27 @@ function handlePass(roomCode) {
     });
   }
 
-  room.positionRounds[
-    auction.position
-  ]--;
+  room.positionRounds[auction.position]--;
 
   const result = {
-    winnerId:
-      winner.id,
+    winnerId: winner.id,
+    loserId: loser.id,
 
-    loserId:
-      loser.id,
-
-    soldPlayer:
-      publicPlayer(
-        auction.player
-      ),
+    soldPlayer: publicPlayer(
+      auction.player
+    ),
 
     price,
 
-    replacement:
-      publicPlayer(
-        replacement
-      ),
+    replacement: publicPlayer(
+      replacement
+    ),
 
-    winnerMoney:
-      winner.money,
+    winnerMoney: winner.money,
+    loserMoney: loser.money,
 
-    loserMoney:
-      loser.money,
-
-    winnerTeam:
-      winner.team,
-
-    loserTeam:
-      loser.team
+    winnerTeam: winner.team,
+    loserTeam: loser.team
   };
 
   room.auction = null;
@@ -1023,11 +851,9 @@ function handlePass(roomCode) {
 
   sendRoomState(roomCode);
 
-  const bothComplete =
-    room.players.every(
-      p =>
-        p.team.length >= 11
-    );
+  const bothComplete = room.players.every(
+    p => p.team.length >= 11
+  );
 
   if (bothComplete) {
     finishGame(roomCode);
@@ -1035,13 +861,9 @@ function handlePass(roomCode) {
   }
 
   setTimeout(() => {
-    const currentRoom =
-      rooms.get(roomCode);
+    const currentRoom = rooms.get(roomCode);
 
-    if (
-      currentRoom &&
-      currentRoom.started
-    ) {
+    if (currentRoom && currentRoom.started) {
       startAuction(roomCode);
     }
   }, 2500);
@@ -1052,124 +874,87 @@ function handlePass(roomCode) {
 ========================================================= */
 
 function finishGame(roomCode) {
-  const room =
-    rooms.get(roomCode);
+  const room = rooms.get(roomCode);
 
-  if (!room) {
-    return;
-  }
+  if (!room) return;
 
   clearAuctionTimer(room);
 
   room.auction = null;
-
   room.started = false;
+  room.rematchRequests = new Set();
 
-  room.rematchRequests =
-    new Set();
-
-  const results =
-    room.players.map(
-      player => {
-        const totalRating =
-          player.team.reduce(
-            (total, p) =>
-              total +
-              Number(p.rating || 0),
-            0
-          );
-
-        const averageRating =
-          player.team.length > 0
-            ? totalRating /
-              player.team.length
-            : 0;
-
-        return {
-          id:
-            player.id,
-
-          name:
-            player.name,
-
-          money:
-            player.money,
-
-          team:
-            player.team,
-
-          rating:
-            Number(
-              averageRating.toFixed(1)
-            )
-        };
-      }
+  const results = room.players.map(player => {
+    const totalRating = player.team.reduce(
+      (total, p) =>
+        total + Number(p.rating || 0),
+      0
     );
+
+    const averageRating =
+      player.team.length > 0
+        ? totalRating / player.team.length
+        : 0;
+
+    return {
+      id: player.id,
+      name: player.name,
+      money: player.money,
+      team: player.team,
+      rating: Number(
+        averageRating.toFixed(1)
+      )
+    };
+  });
 
   let winnerId = null;
 
   if (results.length === 2) {
-    if (
-      results[0].rating >
-      results[1].rating
-    ) {
-      winnerId =
-        results[0].id;
+    if (results[0].rating > results[1].rating) {
+      winnerId = results[0].id;
     } else if (
-      results[1].rating >
-      results[0].rating
+      results[1].rating > results[0].rating
     ) {
-      winnerId =
-        results[1].id;
+      winnerId = results[1].id;
     }
   }
 
   io.to(roomCode).emit(
     "gameFinished",
     {
-      players:
-        results,
-
+      players: results,
       winnerId,
-
-      canPlayAgain:
-        true
+      canPlayAgain: true
     }
   );
 
+  sendRoomState(roomCode);
+
   console.log(
-    `Game finished in room ${roomCode}. Waiting for rematch.`
+    `Game finished in room ${roomCode}`
   );
 }
 
 /* =========================================================
-   REQUEST PLAY AGAIN
+   PLAY AGAIN
 ========================================================= */
 
-function requestPlayAgain(
-  roomCode,
-  socketId
-) {
-  const room =
-    rooms.get(roomCode);
+function requestPlayAgain(roomCode, socketId) {
+  const room = rooms.get(roomCode);
 
   if (!room) {
     io.to(socketId).emit(
       "auctionError",
       "الغرفة غير موجودة"
     );
-
     return;
   }
 
-  if (
-    room.players.length !== 2
-  ) {
+  if (room.players.length !== 2) {
     io.to(socketId).emit(
       "auctionError",
       "يجب أن يكون هناك لاعبان"
     );
-
     return;
   }
 
@@ -1178,39 +963,26 @@ function requestPlayAgain(
       "auctionError",
       "الجولة الحالية لم تنتهِ بعد"
     );
-
     return;
   }
 
-  const player =
-    room.players.find(
-      p =>
-        p.id === socketId
-    );
+  const player = room.players.find(
+    p => p.id === socketId
+  );
 
   if (!player) {
     io.to(socketId).emit(
       "auctionError",
       "أنت لست داخل هذه الغرفة"
     );
-
     return;
   }
 
-  if (
-    !room.rematchRequests
-  ) {
-    room.rematchRequests =
-      new Set();
+  if (!room.rematchRequests) {
+    room.rematchRequests = new Set();
   }
 
-  /*
-    اللاعب وافق على اللعب مرة أخرى.
-  */
-
-  room.rematchRequests.add(
-    socketId
-  );
+  room.rematchRequests.add(socketId);
 
   const requested =
     room.rematchRequests.size;
@@ -1221,10 +993,6 @@ function requestPlayAgain(
   const ready =
     requested === total;
 
-  /*
-    إرسال حالة الانتظار للجميع.
-  */
-
   io.to(roomCode).emit(
     "rematchStatus",
     {
@@ -1233,11 +1001,6 @@ function requestPlayAgain(
       ready
     }
   );
-
-  /*
-    اللاعبان وافقا.
-    نبدأ الجولة الجديدة تلقائيًا.
-  */
 
   if (ready) {
     startNewRound(roomCode);
@@ -1248,438 +1011,442 @@ function requestPlayAgain(
    SOCKET CONNECTION
 ========================================================= */
 
-io.on(
-  "connection",
-  socket => {
+io.on("connection", socket => {
+  console.log(
+    "Player connected:",
+    socket.id
+  );
+
+  /* =======================================================
+     CREATE ROOM
+  ======================================================= */
+
+  socket.on("createRoom", ({ name } = {}) => {
+    if (!name || !name.trim()) {
+      socket.emit(
+        "errorMessage",
+        "اكتب اسمك الأول"
+      );
+      return;
+    }
+
+    const roomCode =
+      generateRoomCode();
+
+    const room = {
+      host: socket.id,
+
+      started: false,
+
+      players: [
+        {
+          id: socket.id,
+          name: name.trim(),
+          money: STARTING_MONEY,
+          team: [],
+          connected: true
+        }
+      ],
+
+      usedPlayers: [],
+
+      auction: null,
+
+      auctionTimer: null,
+
+      positionRounds: {
+        GK: 1,
+        DEF: 4,
+        MID: 3,
+        ATT: 3
+      },
+
+      rematchRequests: new Set(),
+
+      createdAt: Date.now()
+    };
+
+    rooms.set(roomCode, room);
+
+    socket.join(roomCode);
+
+    socket.data.roomCode = roomCode;
+    socket.data.playerName = name.trim();
+
     console.log(
-      "Player connected:",
+      `ROOM CREATED: ${roomCode} BY ${name.trim()}`
+    );
+
+    socket.emit(
+      "roomCreated",
+      {
+        roomCode,
+
+        players:
+          publicPlayers(room),
+
+        isHost: true
+      }
+    );
+
+    sendRoomState(roomCode);
+  });
+
+  /* =======================================================
+     JOIN ROOM
+  ======================================================= */
+
+  socket.on(
+    "joinRoom",
+    ({ name, roomCode } = {}) => {
+      if (!name || !name.trim()) {
+        socket.emit(
+          "errorMessage",
+          "اكتب اسمك الأول"
+        );
+        return;
+      }
+
+      if (!roomCode || !roomCode.trim()) {
+        socket.emit(
+          "errorMessage",
+          "اكتب كود الغرفة"
+        );
+        return;
+      }
+
+      const code =
+        roomCode.trim().toUpperCase();
+
+      console.log(
+        `JOIN REQUEST: ${name.trim()} -> ${code}`
+      );
+
+      console.log(
+        "AVAILABLE ROOMS:",
+        [...rooms.keys()]
+      );
+
+      const room =
+        rooms.get(code);
+
+      if (!room) {
+        console.log(
+          `ROOM NOT FOUND: ${code}`
+        );
+
+        socket.emit(
+          "errorMessage",
+          "الغرفة غير موجودة"
+        );
+
+        return;
+      }
+
+      if (room.players.length >= 2) {
+        socket.emit(
+          "errorMessage",
+          "الغرفة ممتلئة"
+        );
+        return;
+      }
+
+      if (room.started) {
+        socket.emit(
+          "errorMessage",
+          "اللعبة بدأت بالفعل"
+        );
+        return;
+      }
+
+      const player = {
+        id: socket.id,
+        name: name.trim(),
+        money: STARTING_MONEY,
+        team: [],
+        connected: true
+      };
+
+      room.players.push(player);
+
+      socket.join(code);
+
+      socket.data.roomCode = code;
+      socket.data.playerName = name.trim();
+
+      console.log(
+        `PLAYER JOINED ROOM: ${name.trim()} -> ${code}`
+      );
+
+      socket.emit(
+        "roomJoined",
+        {
+          roomCode: code,
+
+          players:
+            publicPlayers(room),
+
+          isHost: false
+        }
+      );
+
+      io.to(code).emit(
+        "playersUpdated",
+        {
+          players:
+            publicPlayers(room)
+        }
+      );
+
+      sendRoomState(code);
+    }
+  );
+
+  /* =======================================================
+     START GAME
+  ======================================================= */
+
+  socket.on("startGame", () => {
+    const roomCode =
+      socket.data.roomCode;
+
+    const room =
+      rooms.get(roomCode);
+
+    if (!room) {
+      socket.emit(
+        "auctionError",
+        "الغرفة غير موجودة"
+      );
+      return;
+    }
+
+    if (room.host !== socket.id) {
+      socket.emit(
+        "auctionError",
+        "المضيف فقط يستطيع بدء اللعبة"
+      );
+      return;
+    }
+
+    if (room.players.length !== 2) {
+      socket.emit(
+        "auctionError",
+        "يجب أن يكون هناك لاعبان"
+      );
+      return;
+    }
+
+    if (room.started) {
+      return;
+    }
+
+    startNewRound(roomCode);
+  });
+
+  /* =======================================================
+     PLAY AGAIN
+  ======================================================= */
+
+  socket.on("playAgain", () => {
+    const roomCode =
+      socket.data.roomCode;
+
+    if (!roomCode) {
+      socket.emit(
+        "auctionError",
+        "أنت لست داخل غرفة"
+      );
+      return;
+    }
+
+    requestPlayAgain(
+      roomCode,
       socket.id
     );
+  });
 
-    /* =====================================================
-       CREATE ROOM
-    ===================================================== */
+  /* =======================================================
+     +1
+  ======================================================= */
 
-    socket.on(
-      "createRoom",
-      ({ name }) => {
-        if (
-          !name ||
-          !name.trim()
-        ) {
-          socket.emit(
-            "errorMessage",
-            "اكتب اسمك الأول"
-          );
+  socket.on("bidOne", () => {
+    const roomCode =
+      socket.data.roomCode;
 
-          return;
-        }
+    bidOne(
+      roomCode,
+      socket.id
+    );
+  });
 
-        const roomCode =
-          generateRoomCode();
+  /* =======================================================
+     CUSTOM BID
+  ======================================================= */
 
-        const room = {
-          host:
-            socket.id,
+  socket.on(
+    "customBid",
+    ({ amount } = {}) => {
+      const roomCode =
+        socket.data.roomCode;
 
-          started:
-            false,
+      customBid(
+        roomCode,
+        socket.id,
+        amount
+      );
+    }
+  );
 
-          players: [
-            {
-              id:
-                socket.id,
+  /* =======================================================
+     PASS
+  ======================================================= */
 
-              name:
-                name.trim(),
+  socket.on("passAuction", () => {
+    const roomCode =
+      socket.data.roomCode;
 
-              money:
-                STARTING_MONEY,
+    handlePass(roomCode);
+  });
 
-              team:
-                []
-            }
-          ],
+  /* =======================================================
+     DISCONNECT
+  ======================================================= */
 
-          usedPlayers:
-            [],
-
-          auction:
-            null,
-
-          auctionTimer:
-            null,
-
-          positionRounds: {
-            GK: 1,
-            DEF: 4,
-            MID: 3,
-            ATT: 3
-          },
-
-          rematchRequests:
-            new Set()
-        };
-
-        rooms.set(
-          roomCode,
-          room
-        );
-
-        socket.join(
-          roomCode
-        );
-
-        socket.data.roomCode =
-          roomCode;
-
-        socket.data.playerName =
-          name.trim();
-
-        console.log(
-          `Room ${roomCode} created by ${name}`
-        );
-
-        socket.emit(
-          "roomCreated",
-          {
-            roomCode,
-
-            players:
-              publicPlayers(
-                room
-              ),
-
-            isHost:
-              true
-          }
-        );
-      }
+  socket.on("disconnect", reason => {
+    console.log(
+      `PLAYER DISCONNECTED: ${socket.id}`
     );
 
-    /* =====================================================
-       JOIN ROOM
-    ===================================================== */
-
-    socket.on(
-      "joinRoom",
-      ({ name, roomCode }) => {
-        if (
-          !name ||
-          !name.trim()
-        ) {
-          socket.emit(
-            "errorMessage",
-            "اكتب اسمك الأول"
-          );
-
-          return;
-        }
-
-        if (
-          !roomCode ||
-          !roomCode.trim()
-        ) {
-          socket.emit(
-            "errorMessage",
-            "اكتب كود الغرفة"
-          );
-
-          return;
-        }
-
-        const code =
-          roomCode
-            .trim()
-            .toUpperCase();
-
-        const room =
-          rooms.get(code);
-
-        if (!room) {
-          socket.emit(
-            "errorMessage",
-            "الغرفة غير موجودة"
-          );
-
-          return;
-        }
-
-        if (
-          room.players.length >=
-          2
-        ) {
-          socket.emit(
-            "errorMessage",
-            "الغرفة ممتلئة"
-          );
-
-          return;
-        }
-
-        if (room.started) {
-          socket.emit(
-            "errorMessage",
-            "اللعبة بدأت بالفعل"
-          );
-
-          return;
-        }
-
-        const player = {
-          id:
-            socket.id,
-
-          name:
-            name.trim(),
-
-          money:
-            STARTING_MONEY,
-
-          team:
-            []
-        };
-
-        room.players.push(
-          player
-        );
-
-        socket.join(code);
-
-        socket.data.roomCode =
-          code;
-
-        socket.data.playerName =
-          name.trim();
-
-        console.log(
-          `${name} joined room ${code}`
-        );
-
-        socket.emit(
-          "roomJoined",
-          {
-            roomCode:
-              code,
-
-            players:
-              publicPlayers(
-                room
-              ),
-
-            isHost:
-              false
-          }
-        );
-
-        io.to(code).emit(
-          "playersUpdated",
-          {
-            players:
-              publicPlayers(
-                room
-              )
-          }
-        );
-      }
+    console.log(
+      `REASON: ${reason}`
     );
 
-    /* =====================================================
-       START GAME
-    ===================================================== */
+    const roomCode =
+      socket.data.roomCode;
 
-    socket.on(
-      "startGame",
-      () => {
-        const roomCode =
-          socket.data.roomCode;
+    if (!roomCode) {
+      return;
+    }
 
-        const room =
-          rooms.get(roomCode);
+    const room =
+      rooms.get(roomCode);
 
-        if (!room) {
-          socket.emit(
-            "auctionError",
-            "الغرفة غير موجودة"
-          );
+    if (!room) {
+      return;
+    }
 
-          return;
-        }
+    const player =
+      room.players.find(
+        p => p.id === socket.id
+      );
 
-        if (
-          room.host !==
-          socket.id
-        ) {
-          socket.emit(
-            "auctionError",
-            "المضيف فقط يستطيع بدء اللعبة"
-          );
+    /*
+      مهم جدًا:
+      لا نحذف الغرفة بمجرد انقطاع الاتصال.
 
-          return;
-        }
+      الموبايل ممكن يفقد الاتصال لحظيًا،
+      ولو حذفنا الغرفة هنا اللاعب الثاني
+      سيحصل على "الغرفة غير موجودة".
+    */
 
-        if (
-          room.players.length !==
-          2
-        ) {
-          socket.emit(
-            "auctionError",
-            "يجب أن يكون هناك لاعبان"
-          );
+    if (player) {
+      player.connected = false;
+    }
 
-          return;
-        }
-
-        if (room.started) {
-          return;
-        }
-
-        startNewRound(
-          roomCode
-        );
-      }
+    console.log(
+      `ROOM ${roomCode} KEPT AFTER DISCONNECT`
     );
 
-    /* =====================================================
-       PLAY AGAIN
-    ===================================================== */
+    sendRoomState(roomCode);
 
-    socket.on(
-      "playAgain",
-      () => {
-        const roomCode =
-          socket.data.roomCode;
+    /*
+      لو اللاعب رجع عن طريق Socket.IO recovery
+      أو عمل Join مرة أخرى، الغرفة ما زالت موجودة.
+    */
+  });
 
-        if (!roomCode) {
-          socket.emit(
-            "auctionError",
-            "أنت لست داخل غرفة"
-          );
+  /* =======================================================
+     ERROR
+  ======================================================= */
 
-          return;
-        }
-
-        requestPlayAgain(
-          roomCode,
-          socket.id
-        );
-      }
+  socket.on("error", error => {
+    console.error(
+      "SOCKET ERROR:",
+      error
     );
-
-    /* =====================================================
-       +1M
-    ===================================================== */
-
-    socket.on(
-      "bidOne",
-      () => {
-        const roomCode =
-          socket.data.roomCode;
-
-        bidOne(
-          roomCode,
-          socket.id
-        );
-      }
-    );
-
-    /* =====================================================
-       CUSTOM BID
-    ===================================================== */
-
-    socket.on(
-      "customBid",
-      ({ amount }) => {
-        const roomCode =
-          socket.data.roomCode;
-
-        customBid(
-          roomCode,
-          socket.id,
-          amount
-        );
-      }
-    );
-
-    /* =====================================================
-       PASS
-    ===================================================== */
-
-    socket.on(
-      "passAuction",
-      () => {
-        const roomCode =
-          socket.data.roomCode;
-
-        handlePass(
-          roomCode
-        );
-      }
-    );
-
-    /* =====================================================
-       DISCONNECT
-    ===================================================== */
-
-    socket.on(
-      "disconnect",
-      () => {
-        console.log(
-          "Player disconnected:",
-          socket.id
-        );
-
-        const roomCode =
-          socket.data.roomCode;
-
-        if (!roomCode) {
-          return;
-        }
-
-        const room =
-          rooms.get(roomCode);
-
-        if (!room) {
-          return;
-        }
-
-        clearAuctionTimer(
-          room
-        );
-
-        rooms.delete(
-          roomCode
-        );
-
-        console.log(
-          `Room ${roomCode} deleted`
-        );
-      }
-    );
-  }
-);
+  });
+});
 
 /* =========================================================
    EXPRESS
 ========================================================= */
 
+app.use(express.json());
+
 app.use(
-  express.static(
-    __dirname
-  )
+  express.static(__dirname, {
+    maxAge: 0,
+    etag: false
+  })
 );
 
-app.get(
-  "/",
-  (req, res) => {
-    res.sendFile(
-      path.join(
-        __dirname,
-        "index.html"
-      )
-    );
-  }
-);
+/* =========================================================
+   HEALTH CHECK
+========================================================= */
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    game: "EMBABI Online",
+    rooms: rooms.size,
+    time: new Date().toISOString()
+  });
+});
+
+/* =========================================================
+   ROOM DEBUG
+========================================================= */
+
+app.get("/rooms", (req, res) => {
+  res.json({
+    count: rooms.size,
+
+    rooms: [...rooms.entries()].map(
+      ([code, room]) => ({
+        code,
+        players: room.players.map(
+          p => ({
+            name: p.name,
+            connected: p.connected
+          })
+        ),
+        started: room.started
+      })
+    )
+  });
+});
+
+/* =========================================================
+   HOME
+========================================================= */
+
+app.get("/", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "index.html"
+    )
+  );
+});
+
+/* =========================================================
+   404
+========================================================= */
+
+app.use((req, res) => {
+  res.status(404).send("EMBABI Online - Not Found");
+});
 
 /* =========================================================
    SERVER
@@ -1689,8 +1456,44 @@ server.listen(
   PORT,
   "0.0.0.0",
   () => {
+    console.log("");
+    console.log("=================================");
+    console.log("      EMBABI ONLINE SERVER");
+    console.log("=================================");
     console.log(
-      `EMBABI Online Server running on port ${PORT}`
+      `PORT: ${PORT}`
+    );
+    console.log(
+      `ROOMS: ${rooms.size}`
+    );
+    console.log(
+      `HEALTH: /health`
+    );
+    console.log("=================================");
+    console.log("");
+  }
+);
+
+/* =========================================================
+   PROCESS ERRORS
+========================================================= */
+
+process.on(
+  "uncaughtException",
+  error => {
+    console.error(
+      "UNCAUGHT EXCEPTION:",
+      error
+    );
+  }
+);
+
+process.on(
+  "unhandledRejection",
+  error => {
+    console.error(
+      "UNHANDLED REJECTION:",
+      error
     );
   }
 );
